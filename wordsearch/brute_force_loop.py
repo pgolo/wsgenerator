@@ -37,6 +37,7 @@ for word in words:
         partial_solutions += fits
     solutions = partial_solutions
 
+# idea:
 # grids = [grid]
 
 # word = words[0]
@@ -66,4 +67,3 @@ for grid in solutions:
     print('---')
 
 print(len(solutions))
-
