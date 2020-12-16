@@ -3,16 +3,11 @@ import random
 import string
 
 def placements(grid, word):
+    solutions = []
     grid_height = len(grid)
     grid_width = len(grid[0])
-    ys = list(range(grid_height))
-    xs = list(range(grid_width))
-    directions = [(0, 1), (1, 0), (1, -1), (1, 1)]
-    random.shuffle(ys)
-    random.shuffle(xs)
-    random.shuffle(directions)
-    for y in ys:
-        for x in xs:
+    for y in range(grid_height):
+        for x in range(grid_width):
             for direction in [(0, 1), (1, 0), (1, -1), (1, 1)]:
                 for letters in [word, ''.join(reversed(word))]:
                     not_fit = False
@@ -26,20 +21,27 @@ def placements(grid, word):
                         solution[this_y][this_x] = letters[i]
                     if not_fit:
                         continue
-                    yield solution
+                    solutions.append(solution)
+    random.shuffle(solutions)
+    return solutions
 
-def trace_grids(grid, words, word_index):
+def trace_grids(grids, words, word_index):
     word = words[word_index]
-    try:
-        solution = next(placements(grid, word))
-    except StopIteration:
-        return [] # <-- TODO: instead of giving up, fall back
+    solutions = []
+    ret = []
+    for grid in grids:
+        fits = placements(grid, word)
+        solutions += fits
     word_index += 1
     if word_index < len(words):
-        return trace_grids(solution, words, word_index)
+        random.shuffle(solutions)
+        for i in range(0, len(solutions)):
+            ret = trace_grids([solutions[i]], words, word_index)
+            if len(ret) > 0:
+                break
+        return ret
     else:
-        return solution
-
+        return solutions
 
 words = [
     'cow',
@@ -70,25 +72,28 @@ words = [
     'qwerty',
     'uiop',
     'asdfg',
-    'zxcvxc'
-    #'topyuytsdgfwewq'
+    'zxcvxc',
+    'topyuytsdgfwewq'
 ]
 
-grid_width = 12
-grid_height = 12
+grid_width = 15
+grid_height = 15
 grid = [['' for _ in range(grid_width)] for _ in range(grid_height)]
 
 words.sort(key=lambda word: -len(word))
-solution = trace_grids(grid, words, 0)
-for row in solution:
-    for i in range(len(row)):
-        if row[i] == '':
-            #row[i] = random.choice(string.ascii_letters)
-            row[i] = ' '
-        row[i] = row[i].upper()
+grids = [grid]
+solutions = trace_grids(grids, words, 0)
+if len(solutions) > 0:
+    solution = solutions[random.randint(0, len(solutions)-1)]
+    for row in solution:
+        for i in range(len(row)):
+            if row[i] == '':
+                #row[i] = random.choice(string.ascii_letters)
+                row[i] = ' '
+            row[i] = row[i].upper()
 
-for row in solution:
-    print(row)
-print('---')
+    for row in solution:
+        print(row)
+    print('---')
 
-print(len(solution))
+    print(len(solutions))
