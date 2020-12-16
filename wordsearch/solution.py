@@ -2,18 +2,11 @@ import copy
 import random
 import string
 
-def placements(grid, word):
-    grid_height = len(grid)
-    grid_width = len(grid[0])
-    ys = list(range(grid_height))
-    xs = list(range(grid_width))
-    directions = [(0, 1), (1, 0), (1, -1), (1, 1)]
-    random.shuffle(ys)
-    random.shuffle(xs)
-    random.shuffle(directions)
+def placements(grid, word, ys, xs, directions):
+    visited = set()
     for y in ys:
         for x in xs:
-            for direction in [(0, 1), (1, 0), (1, -1), (1, 1)]:
+            for direction in directions:
                 for letters in [word, ''.join(reversed(word))]:
                     not_fit = False
                     solution = copy.deepcopy(grid)
@@ -24,21 +17,37 @@ def placements(grid, word):
                             not_fit = True
                             break
                         solution[this_y][this_x] = letters[i]
+                    visited.add((y, x))
                     if not_fit:
                         continue
-                    yield solution
+                    yield solution, visited
 
-def trace_grids(grid, words, word_index):
+def trace_grids(grid, words, word_index, grid_height, grid_width, ys, xs, directions):
     word = words[word_index]
     try:
-        solution = next(placements(grid, word))
+        solution, visited = next(placements(grid, word, ys, xs, directions))
     except StopIteration:
-        return [] # <-- TODO: instead of giving up, fall back
+        return [], set()
     word_index += 1
     if word_index < len(words):
-        return trace_grids(solution, words, word_index)
+        _ys = list(ys)
+        _xs = list(xs)
+        _directions = list(directions)
+        random.shuffle(_ys)
+        random.shuffle(_xs)
+        random.shuffle(_directions)
+        while True:
+            q, visited = trace_grids(solution, words, word_index, grid_height, grid_width, _ys, _xs, _directions)
+            for ccc in visited:
+                if ccc[0] in _ys:
+                    _ys.remove(ccc[0])
+                if ccc[1] in _xs:
+                    _xs.remove(ccc[1])
+            visited.clear()
+            if q is not None and len(q) > 0:
+                return q, visited
     else:
-        return solution
+        return solution, visited
 
 
 words = [
@@ -78,8 +87,14 @@ grid_width = 12
 grid_height = 12
 grid = [['' for _ in range(grid_width)] for _ in range(grid_height)]
 
+ys = list(range(grid_height))
+xs = list(range(grid_width))
+directions = [(0, 1), (1, 0), (1, -1), (1, 1)]
+
+
 words.sort(key=lambda word: -len(word))
-solution = trace_grids(grid, words, 0)
+
+solution, _ = trace_grids(grid, words, 0, grid_height, grid_width, ys, xs, directions)
 for row in solution:
     for i in range(len(row)):
         if row[i] == '':
