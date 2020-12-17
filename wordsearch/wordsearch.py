@@ -61,76 +61,40 @@ def translate_hints(hints):
         solution[word] = {'row': y, 'column': x, 'direction': direction_hint}
     return solution
 
-words = [
-    'cow',
-    'goat',
-    'pig',
-    'buffalo',
-    'chicken',
-    'sheep',
-    'lamb',
-    'goose',
-    'turkey',
-    'duck'
-    'horse',
-    'cattle',
-    'llama',
-    'bison',
-    'hen',
-    'calf',
-    'rooster',
-    'bull',
-    'donkey',
-    'dog'
-    'geese',
-    'fish',
-    'deer',
-    'birds',
-    'bees',
-    'qwerty',
-    'uiop',
-    'asdfg',
-    'zxcvxc',
-    'topyuytsdgfwqqq'
-]
+def make_puzzle(height, width, words):
+    grid = [['' for _ in range(width)] for _ in range(height)]
+    directions = [(0, 1), (1, 0), (1, -1), (1, 1)]
+    points = [
+        item for sublist in [
+            item for sublist in [
+                [
+                    [
+                        (x, y, d) for x in range(width)
+                    ] for y in range(height)
+                ] for d in directions
+            ] for item in sublist
+        ] for item in sublist
+    ]
+    hints = {}
+    words = sorted(words, key=lambda word: -len(word))
+    solution, _, _, _, _ = trace_grids(grid, words, 0, height, width, hints, points)
+    for row in solution:
+        for i in range(len(row)):
+            if row[i] == '':
+                row[i] = random.choice(string.ascii_letters)
+                #row[i] = ' '
+            row[i] = row[i].upper()
+    return solution, hints
 
-# words = [
-#     'e',
-#     'aaa',
-#     'bb',
-#     'c',
-#     'dd'
-# ]
-
-grid_width = 15
-grid_height = 15
-grid = [['' for _ in range(grid_width)] for _ in range(grid_height)]
-
-directions = [(0, 1), (1, 0), (1, -1), (1, 1)]
-points = [item for sublist in [item for sublist in [[[(x, y, d) for x in range(grid_width)] for y in range(grid_height)] for d in directions] for item in sublist] for item in sublist]
-
-words.sort(key=lambda word: -len(word))
-
-hints = {}
-
-solution, _, _, _, _ = trace_grids(grid, words, 0, grid_height, grid_width, hints, points)
-for row in solution:
-    for i in range(len(row)):
-        if row[i] == '':
-            #row[i] = random.choice(string.ascii_letters)
-            row[i] = ' '
-        row[i] = row[i].upper()
-
-header_row = [' '] + ['%d' % (column_number + 1) for column_number in range(len(solution[0]))]
-print(header_row)
-row_number = 0
-for row in solution:
-    row_number += 1
-    printed_row = ['%d' % (row_number)] + row
-    print(printed_row)
-print('---')
-translated_hints = translate_hints(hints)
-for word in translated_hints:
-    print(word, translated_hints[word])
-
-print('---')
+def pretty_puzzle(height, width, words):
+    puzzle, hints = make_puzzle(height, width, words)
+    if len(puzzle) == 0:
+        return [], {}
+    _pretty_puzzle = []
+    _pretty_puzzle.append([' '] + ['%d' % (column_number + 1) for column_number in range(len(puzzle[0]))])
+    row_number = 0
+    for row in puzzle:
+        row_number += 1
+        _pretty_puzzle.append(['%d' % (row_number)] + row)
+    _pretty_hints = translate_hints(hints)
+    return _pretty_puzzle, _pretty_hints
