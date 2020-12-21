@@ -77,7 +77,7 @@ def create(height, width, words):
     hints_js += '  </script>\n'
     return puzzle_js, hints_js
 
-puzzle, hints = create(20, 20, ['cat', 'dog', 'frog', 'abc', 'def', 'qwe'])
+puzzle, hints = create(15, 15, ['Maryland', 'Virginia', 'Vermont', 'Monatna', 'Delaware', 'Alabama', 'Alaska', 'Hawaii', 'Arizona', 'California', 'Texas', 'Indiana'])
 with open('puzzle.html', mode='w', encoding='utf8') as f:
     f.write('<html>\n  <head>\n    <style type="text/css">body{-webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;}</style>\n  </head>\n  <body>\n%s  </body>\n</html>' % puzzle)
 with open('cheatsheet.html', mode='w', encoding='utf8') as f:
