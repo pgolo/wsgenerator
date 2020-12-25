@@ -8,11 +8,22 @@ function recordLetter(r, c, letter) {
 
 function render(words, puzzle) {
   g_words = words;
+  var wordbank_max_rows = 1;
+  var wordbank_max_cols = 3;
+  var wordbank_row = 0;
+  var wordbank_col = 0;
+  var wordbank_font_size = 0.6;
+  var wordbank_height = wordbank_max_rows * Math.ceil(words.length / (wordbank_max_rows * wordbank_max_cols)) * wordbank_font_size;
   var grid = []; var letters = []; var buttons = [];
   var x_margin = 1; var y_margin = 1;
   var x = x_margin; var y = y_margin;
   var cell_size = 1; var font_size = 0.8;
-  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.setAttribute("width", (puzzle[0].length + 1) * cell_size + x_margin * 2 + "cm"); svg.setAttribute("height", (puzzle.length + 1) * cell_size + x_margin * 2 + "cm"); document.body.appendChild(svg);
+  var svg_width = (puzzle[0].length + 1) * cell_size + x_margin * 2;
+  var svg_height = (puzzle.length + 1) * cell_size + y_margin * 2 + wordbank_height + 1;
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", svg_width + "cm");
+  svg.setAttribute("height", svg_height + "cm");
+  document.body.appendChild(svg);
   for (r = 0; r < puzzle.length; r++) {
     x = x_margin;
     grid.push([]); letters.push([]); buttons.push([]);
@@ -64,4 +75,26 @@ function render(words, puzzle) {
   frame.setAttribute("rx", "10");
   frame.setAttribute("ry", "10");
   svg.appendChild(frame);
+
+  var wordbank = {};
+  var wordbank_group = 0;
+  for (i = 0; i < g_words.length; i++) {
+    word = g_words[i];
+    wordbank[word] = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    wordbank[word].setAttribute("x", wordbank_col * svg_width / wordbank_max_cols + "cm");
+    wordbank[word].setAttribute("y", cell_size * puzzle.length + 4 + wordbank_row * wordbank_font_size + "cm");
+    wordbank[word].setAttribute("font-size", wordbank_font_size + "cm");
+    wordbank[word].appendChild(document.createTextNode(word));
+    svg.appendChild(wordbank[word]);
+    wordbank_row += 1;
+    if (wordbank_row == (wordbank_group + 1) * wordbank_max_rows) {
+      wordbank_col += 1;
+      wordbank_row = wordbank_group * wordbank_max_rows;
+    }
+    if (wordbank_col == wordbank_max_cols) {
+      wordbank_col = 0;
+      wordbank_group += 1;
+      wordbank_row += wordbank_max_rows;
+    }
+  }
 }
