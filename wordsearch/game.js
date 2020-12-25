@@ -1,13 +1,80 @@
-g_word = '';
-g_words = [];
+var button_styles = {
+  "over": "fill:white;opacity:50%;stroke-width:0px",
+  "out": "fill:white;opacity:0%;stroke-width:0px",
+  "selected": "fill:white;opacity:90%;stroke-width:0px"
+}
+
+var g_word = '';
+var g_wordbank = {};
+var g_buttons = [];
+var selected = [];
+var selected_buttons = [];
+
+function maySelect(r, c) {
+  if (selected.length == 0) {
+    return true;
+  } else if (selected.length == 2 && Math.abs(r - selected[0]) <= 1 && Math.abs(c - selected[1]) <= 1 && (r != selected[0] || c != selected[1])) {
+    return true;
+  }
+  else {
+    dr = selected[2] - selected[0];
+    dc = selected[3] - selected[1];
+    last_r = selected[selected.length-2];
+    last_c = selected[selected.length-1];
+    if (r - last_r == dr && c - last_c == dc) {
+      return true
+    }
+  }
+  return false
+}
+
+function flickerButton(r, c, style) {
+  for (i = 0; i < selected.length - 1; i += 2) {
+    if (selected[i] == r && selected[i+1] == c) {
+      g_buttons[r][c].setAttribute("style", button_styles["selected"]);
+      return
+    }
+  }
+  if (style == 'over') {
+    g_buttons[r][c].setAttribute("style", button_styles["over"]);
+    return
+  }
+  if (style == 'out') {
+    g_buttons[r][c].setAttribute("style", button_styles["out"]);
+    return
+  }
+}
+
+function deselectAll() {
+  selected = [];
+  for (i = 0; i < selected_buttons.length; i++) {
+    selected_buttons[i].setAttribute("style", button_styles["out"]);
+  }
+  selected_buttons = [];
+  g_word = '';
+}
 
 function recordLetter(r, c, letter) {
-  g_word += letter;
-  alert(g_word);
+  deselect = false;
+  if (!maySelect(r, c)) {
+    if (selected.length == 2 && r == selected[0] && c == selected[1]) {
+      deselect = true;
+    }
+    deselectAll();
+  }
+  if (!deselect) {
+    selected.push(r, c);
+    selected_buttons.push(g_buttons[r][c]);
+    flickerButton(r, c, 'selected')
+    g_word += letter;
+    if (g_wordbank[g_word] != undefined) {
+      g_wordbank[g_word].setAttribute("style", "text-decoration:line-through");
+      deselectAll();
+    }
+  }
 }
 
 function render(words, puzzle) {
-  g_words = words;
   var wordbank_max_rows = 1;
   var wordbank_max_cols = 3;
   var wordbank_row = 0;
@@ -57,9 +124,9 @@ function render(words, puzzle) {
       buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("height", cell_size + "cm");
       buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("style", "fill:white;opacity:0%;stroke-width:0px");
       if (r * c != 0) {
-        buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmouseover", "evt.target.setAttribute('style', 'fill:white;opacity:50%;stroke-width:0px');");
-        buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmouseout", "evt.target.setAttribute('style', 'fill:white;opacity:0%;stroke-width:0px');");
-        buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmousedown", "recordLetter(" + r + ", " + c + ", '" + puzzle[r][c] + "');");
+        buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmouseover", "flickerButton(" + r + ", " + c + ", \"over\");");
+        buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmouseout", "flickerButton(" + r + ", " + c + ", \"out\");");
+        buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmousedown", "recordLetter(" + r + ", " + c + ", \"" + puzzle[r][c] + "\");");
       }
       svg.appendChild(grid[grid.length - 1][grid[grid.length - 1].length - 1]);
       svg.appendChild(letters[letters.length - 1][letters[letters.length - 1].length - 1]);
@@ -78,8 +145,8 @@ function render(words, puzzle) {
 
   var wordbank = {};
   var wordbank_group = 0;
-  for (i = 0; i < g_words.length; i++) {
-    word = g_words[i];
+  for (i = 0; i < words.length; i++) {
+    word = words[i];
     wordbank[word] = document.createElementNS("http://www.w3.org/2000/svg", "text");
     wordbank[word].setAttribute("x", wordbank_col * svg_width / wordbank_max_cols + "cm");
     wordbank[word].setAttribute("y", cell_size * puzzle.length + 4 + wordbank_row * wordbank_font_size + "cm");
@@ -97,4 +164,6 @@ function render(words, puzzle) {
       wordbank_row += wordbank_max_rows;
     }
   }
+  g_wordbank = wordbank;
+  g_buttons = buttons;
 }
