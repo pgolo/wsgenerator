@@ -9,18 +9,43 @@ var g_wordbank = {};
 var g_buttons = [];
 var selected = [];
 var selected_buttons = [];
+var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+  var angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
+
+  return {
+    x: centerX + (radius * Math.cos(angleInRadians)),
+    y: centerY + (radius * Math.sin(angleInRadians))
+  };
+}
+
+function describeArc(x, y, radius, startAngle, endAngle){
+
+    var start = polarToCartesian(x, y, radius, endAngle);
+    var end = polarToCartesian(x, y, radius, startAngle);
+
+    var largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+    var d = [
+        "M", start.x, start.y, 
+        "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
+    ].join(" ");
+
+    return d;       
+}
 
 function maySelect(r, c) {
   if (selected.length == 0) {
     return true;
-  } else if (selected.length == 2 && Math.abs(r - selected[0]) <= 1 && Math.abs(c - selected[1]) <= 1 && (r != selected[0] || c != selected[1])) {
+  } else if (selected.length == 1 && Math.abs(r - selected[0].r) <= 1 && Math.abs(c - selected[0].c) <= 1 && (r != selected[0].r || c != selected[0].c)) {
     return true;
   }
-  else {
-    dr = selected[2] - selected[0];
-    dc = selected[3] - selected[1];
-    last_r = selected[selected.length-2];
-    last_c = selected[selected.length-1];
+  else if (selected.length > 1) {
+    dr = selected[1].r - selected[0].r;
+    dc = selected[1].c - selected[0].c;
+    last_r = selected[selected.length-1].r;
+    last_c = selected[selected.length-1].c;
     if (r - last_r == dr && c - last_c == dc) {
       return true
     }
@@ -29,8 +54,8 @@ function maySelect(r, c) {
 }
 
 function flickerButton(r, c, style) {
-  for (i = 0; i < selected.length - 1; i += 2) {
-    if (selected[i] == r && selected[i+1] == c) {
+  for (i = 0; i < selected.length; i++) {
+    if (selected[i].r == r && selected[i].c == c) {
       g_buttons[r][c].setAttribute("style", button_styles["selected"]);
       return
     }
@@ -54,20 +79,79 @@ function deselectAll() {
   g_word = '';
 }
 
+function getButtonCenter(r, c) {
+  button_x = parseFloat(g_buttons[r][c].getAttribute("x"));
+  button_y = parseFloat(g_buttons[r][c].getAttribute("y"));
+  button_w = parseFloat(g_buttons[r][c].getAttribute("width"));
+  button_h = parseFloat(g_buttons[r][c].getAttribute("height"));
+  return {
+    x: button_x + button_w / 2,
+    y: button_y + button_h / 2
+  }
+}
+
+function highlightWord() {
+  r1 = selected[0].r;
+  c1 = selected[0].c;
+  r2 = selected[selected.length - 1].r;
+  c2 = selected[selected.length - 1].c;
+  centerButton1 = getButtonCenter(r1, c1);
+  centerButton2 = getButtonCenter(r2, c2);
+  rrr = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  rrr.setAttribute("style", "fill:transparent;stroke:black;stroke-width:1px");
+  
+  if (centerButton1.y == centerButton2.y) {
+    // horizontal
+    rrr.setAttribute("x", Math.min(centerButton1.x, centerButton2.x) + "cm");
+    rrr.setAttribute("y", centerButton1.y + "cm");
+    rrr.setAttribute("width", Math.abs(centerButton1.x - centerButton2.x) + "cm");
+    rrr.setAttribute("height", "0.3cm");
+  }
+  else {
+    if (centerButton1.x == centerButton2.x) {
+      // vertical
+      rrr.setAttribute("x", centerButton1.x + "cm");
+      rrr.setAttribute("y", Math.min(centerButton1.y, centerButton2.y) + "cm");
+      rrr.setAttribute("width", "0.3cm");
+      rrr.setAttribute("height", Math.abs(centerButton1.y - centerButton2.y) + "cm");
+    }
+    else {
+      // diagonal
+      rrr.setAttribute("width", Math.sqrt((centerButton1.x - centerButton2.x) ** 2 + (centerButton1.y - centerButton2.y) ** 2) + "cm");
+      rrr.setAttribute("height", "0.3cm");
+      rrr.setAttribute("x", "0cm");
+      rrr.setAttribute("y", "0cm");
+      if (centerButton1.x < centerButton2.x) {
+        origin = centerButton1;
+      }
+      else {
+        origin = centerButton2;
+      }
+      rrr.setAttribute("transform", "rotate(45)");
+      rrr.setAttribute("x", Math.sqrt(origin.x ** 2 + origin.y ** 2) + "cm");
+      //rrr.setAttribute("y", origin.y + "cm");
+      //alert(rrr.getAttribute("width"));
+    }
+  }
+  
+  svg.appendChild(rrr);
+}
+
 function recordLetter(r, c, letter) {
   deselect = false;
   if (!maySelect(r, c)) {
-    if (selected.length == 2 && r == selected[0] && c == selected[1]) {
+    if (selected.length == 1 && r == selected[0].r && c == selected[0].c) {
       deselect = true;
     }
     deselectAll();
   }
   if (!deselect) {
-    selected.push(r, c);
+    selected.push({r: r, c: c});
     selected_buttons.push(g_buttons[r][c]);
-    flickerButton(r, c, 'selected')
+    flickerButton(r, c, 'selected');
     g_word += letter;
     if (g_wordbank[g_word] != undefined) {
+      highlightWord();
       g_wordbank[g_word].setAttribute("style", "text-decoration:line-through");
       deselectAll();
     }
@@ -87,7 +171,7 @@ function render(words, puzzle) {
   var cell_size = 1; var font_size = 0.8;
   var svg_width = (puzzle[0].length + 1) * cell_size + x_margin * 2;
   var svg_height = (puzzle.length + 1) * cell_size + y_margin * 2 + wordbank_height + 1;
-  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  //var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("width", svg_width + "cm");
   svg.setAttribute("height", svg_height + "cm");
   document.body.appendChild(svg);
