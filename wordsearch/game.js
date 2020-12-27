@@ -4,6 +4,9 @@ var button_styles = {
   "selected": "fill:white;opacity:90%;stroke-width:0px"
 }
 
+var cell_size = 1;
+var font_size = 0.8;
+
 var g_word = '';
 var g_wordbank = {};
 var g_buttons = [];
@@ -47,26 +50,26 @@ function maySelect(r, c) {
     last_r = selected[selected.length-1].r;
     last_c = selected[selected.length-1].c;
     if (r - last_r == dr && c - last_c == dc) {
-      return true
+      return true;
     }
   }
-  return false
+  return false;
 }
 
 function flickerButton(r, c, style) {
   for (i = 0; i < selected.length; i++) {
     if (selected[i].r == r && selected[i].c == c) {
       g_buttons[r][c].setAttribute("style", button_styles["selected"]);
-      return
+      return;
     }
   }
   if (style == 'over') {
     g_buttons[r][c].setAttribute("style", button_styles["over"]);
-    return
+    return;
   }
   if (style == 'out') {
     g_buttons[r][c].setAttribute("style", button_styles["out"]);
-    return
+    return;
   }
 }
 
@@ -87,7 +90,70 @@ function getButtonCenter(r, c) {
   return {
     x: button_x + button_w / 2,
     y: button_y + button_h / 2
-  }
+  };
+}
+
+function highlightFrame(x1, y1, x2, y2, height, margin) {
+
+  l1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  l2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  l3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  l4 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  l5 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  l6 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  l7 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  l8 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+
+  l1.setAttribute("style", "stroke:black;stroke-width:1px");
+  l2.setAttribute("style", "stroke:black;stroke-width:1px");
+  l3.setAttribute("style", "stroke:black;stroke-width:1px");
+  l4.setAttribute("style", "stroke:black;stroke-width:1px");
+  l5.setAttribute("style", "stroke:black;stroke-width:1px");
+  l6.setAttribute("style", "stroke:black;stroke-width:1px");
+  l7.setAttribute("style", "stroke:black;stroke-width:1px");
+  l8.setAttribute("style", "stroke:black;stroke-width:1px");
+
+  l1.setAttribute("x1", Math.min(centerButton1.x, centerButton2.x) - margin + "cm");
+  l1.setAttribute("y1", centerButton1.y - height / 2 + "cm");
+  l1.setAttribute("x2", Math.max(centerButton1.x, centerButton2.x) + margin + "cm");
+  l1.setAttribute("y2", centerButton1.y - height / 2 + "cm");
+
+  l2.setAttribute("x1", Math.min(centerButton1.x, centerButton2.x) - margin + "cm");
+  l2.setAttribute("y1", centerButton1.y + height / 2 + "cm");
+  l2.setAttribute("x2", Math.max(centerButton1.x, centerButton2.x) + margin + "cm");
+  l2.setAttribute("y2", centerButton1.y + height / 2 + "cm");
+
+  l3.setAttribute("x1", l1.getAttribute("x1"));
+  l3.setAttribute("y1", l1.getAttribute("y1"));
+  l3.setAttribute("x2", Math.min(centerButton1.x, centerButton2.x) - margin - 0.1 + "cm");
+  l3.setAttribute("y2", centerButton1.y - height / 2 + 0.1 + "cm");
+
+  l4.setAttribute("x1", l3.getAttribute("x2"));
+  l4.setAttribute("y1", l3.getAttribute("y2"));
+  l4.setAttribute("x2", l4.getAttribute("x1"));
+  l4.setAttribute("y2", centerButton1.y + height / 2 - 0.1 + "cm");
+
+  l5.setAttribute("x1", l4.getAttribute("x2"));
+  l5.setAttribute("y1", l4.getAttribute("y2"));
+  l5.setAttribute("x2", l2.getAttribute("x1"));
+  l5.setAttribute("y2", l2.getAttribute("y1"));
+
+  l6.setAttribute("x1", l1.getAttribute("x2"));
+  l6.setAttribute("y1", l1.getAttribute("y2"));
+  l6.setAttribute("x2", Math.max(centerButton1.x, centerButton2.x) + margin + 0.1 + "cm");
+  l6.setAttribute("y2", centerButton1.y - height / 2 + 0.1 + "cm");
+
+  l7.setAttribute("x1", l6.getAttribute("x2"));
+  l7.setAttribute("y1", l6.getAttribute("y2"));
+  l7.setAttribute("x2", l7.getAttribute("x1"));
+  l7.setAttribute("y2", centerButton1.y + height / 2 - 0.1 + "cm");
+
+  l8.setAttribute("x1", l7.getAttribute("x2"));
+  l8.setAttribute("y1", l7.getAttribute("y2"));
+  l8.setAttribute("x2", l2.getAttribute("x2"));
+  l8.setAttribute("y2", l2.getAttribute("y2"));
+
+  return [l1, l2, l3, l4, l5, l6, l7, l8];
 }
 
 function highlightWord() {
@@ -97,44 +163,46 @@ function highlightWord() {
   c2 = selected[selected.length - 1].c;
   centerButton1 = getButtonCenter(r1, c1);
   centerButton2 = getButtonCenter(r2, c2);
-  rrr = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  rrr.setAttribute("style", "fill:transparent;stroke:black;stroke-width:1px");
+
+
   
   if (centerButton1.y == centerButton2.y) {
     // horizontal
-    rrr.setAttribute("x", Math.min(centerButton1.x, centerButton2.x) + "cm");
-    rrr.setAttribute("y", centerButton1.y + "cm");
-    rrr.setAttribute("width", Math.abs(centerButton1.x - centerButton2.x) + "cm");
-    rrr.setAttribute("height", "0.3cm");
+
+    frame = highlightFrame(centerButton1.x, centerButton1.y, centerButton2.x, centerButton2.y, cell_size * 0.8, cell_size * 0.3);
+
   }
   else {
     if (centerButton1.x == centerButton2.x) {
       // vertical
-      rrr.setAttribute("x", centerButton1.x + "cm");
-      rrr.setAttribute("y", Math.min(centerButton1.y, centerButton2.y) + "cm");
-      rrr.setAttribute("width", "0.3cm");
-      rrr.setAttribute("height", Math.abs(centerButton1.y - centerButton2.y) + "cm");
+      // rrr.setAttribute("x", centerButton1.x + "cm");
+      // rrr.setAttribute("y", Math.min(centerButton1.y, centerButton2.y) + "cm");
+      // rrr.setAttribute("width", "0.3cm");
+      // rrr.setAttribute("height", Math.abs(centerButton1.y - centerButton2.y) + "cm");
     }
     else {
       // diagonal
-      rrr.setAttribute("width", Math.sqrt((centerButton1.x - centerButton2.x) ** 2 + (centerButton1.y - centerButton2.y) ** 2) + "cm");
-      rrr.setAttribute("height", "0.3cm");
-      rrr.setAttribute("x", "0cm");
-      rrr.setAttribute("y", "0cm");
+      // rrr.setAttribute("width", Math.sqrt((centerButton1.x - centerButton2.x) ** 2 + (centerButton1.y - centerButton2.y) ** 2) + "cm");
+      // rrr.setAttribute("height", "0.3cm");
+      // rrr.setAttribute("x", "0cm");
+      // rrr.setAttribute("y", "0cm");
       if (centerButton1.x < centerButton2.x) {
         origin = centerButton1;
       }
       else {
         origin = centerButton2;
       }
-      rrr.setAttribute("transform", "rotate(45)");
-      rrr.setAttribute("x", Math.sqrt(origin.x ** 2 + origin.y ** 2) + "cm");
+      frame = highlightFrame(centerButton1.x, centerButton1.y, centerButton2.x, centerButton2.y, cell_size * 0.8, cell_size * 0.3);
+      // rrr.setAttribute("transform", "rotate(45)");
+      // rrr.setAttribute("x", Math.sqrt(origin.x ** 2 + origin.y ** 2) + "cm");
       //rrr.setAttribute("y", origin.y + "cm");
       //alert(rrr.getAttribute("width"));
     }
   }
   
-  svg.appendChild(rrr);
+  for (i = 0; i < frame.length; i++) {
+    svg.appendChild(frame[i]);
+  }
 }
 
 function recordLetter(r, c, letter) {
@@ -168,7 +236,6 @@ function render(words, puzzle) {
   var grid = []; var letters = []; var buttons = [];
   var x_margin = 1; var y_margin = 1;
   var x = x_margin; var y = y_margin;
-  var cell_size = 1; var font_size = 0.8;
   var svg_width = (puzzle[0].length + 1) * cell_size + x_margin * 2;
   var svg_height = (puzzle.length + 1) * cell_size + y_margin * 2 + wordbank_height + 1;
   //var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
