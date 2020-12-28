@@ -1,54 +1,42 @@
-var button_styles = {
-  "over": "fill:white;opacity:50%;stroke-width:0px",
-  "out": "fill:white;opacity:0%;stroke-width:0px",
-  "selected": "fill:white;opacity:90%;stroke-width:0px"
-}
-
-var cell_size = 1;
-var font_size = 0.8;
-
-var g_word = '';
-var g_wordbank = {};
-var g_buttons = [];
-var selected = [];
-var selected_buttons = [];
-var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-
-function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
-  var angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
-
-  return {
-    x: centerX + (radius * Math.cos(angleInRadians)),
-    y: centerY + (radius * Math.sin(angleInRadians))
-  };
-}
-
-function describeArc(x, y, radius, startAngle, endAngle){
-
-    var start = polarToCartesian(x, y, radius, endAngle);
-    var end = polarToCartesian(x, y, radius, startAngle);
-
-    var largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-
-    var d = [
-        "M", start.x, start.y, 
-        "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
-    ].join(" ");
-
-    return d;       
-}
+var globals = {
+  cell_size: 1,
+  font_size: .8,
+  wb_font_size: .6,
+  wb_max_rows: 1,
+  wb_max_cols: 3,
+  puzzle_margin_x: 1,
+  puzzle_margin_y: 1,
+  frame_rx: 10,
+  frame_ry: 10,
+  word: '',
+  wordbank: {},
+  buttons: [],
+  selected: [],
+  selected_buttons: [],
+  svg: document.createElementNS("http://www.w3.org/2000/svg", "svg"),
+  styles: {
+    "grid-header": "fill:white;stroke:black;stroke-width:0px",
+    "grid-board": "fill:white;stroke:black;stroke-width:1px",
+    "grid-frame": "fill:none;stroke:black;stroke-width:1px",
+    "word-highlight": "stroke:red;stroke-width:2px",
+    "word-crossout": "text-decoration:line-through",
+    "button-over": "fill:white;opacity:50%;stroke-width:0px",
+    "button-out": "fill:white;opacity:0%;stroke-width:0px",
+    "button-selected": "fill:white;opacity:90%;stroke-width:0px"
+  }
+};
 
 function maySelect(r, c) {
-  if (selected.length == 0) {
+  if (globals.selected.length == 0) {
     return true;
-  } else if (selected.length == 1 && Math.abs(r - selected[0].r) <= 1 && Math.abs(c - selected[0].c) <= 1 && (r != selected[0].r || c != selected[0].c)) {
+  } else if (globals.selected.length == 1 && Math.abs(r - globals.selected[0].r) <= 1 && Math.abs(c - globals.selected[0].c) <= 1 && (r != globals.selected[0].r || c != globals.selected[0].c)) {
     return true;
   }
-  else if (selected.length > 1) {
-    dr = selected[1].r - selected[0].r;
-    dc = selected[1].c - selected[0].c;
-    last_r = selected[selected.length-1].r;
-    last_c = selected[selected.length-1].c;
+  else if (globals.selected.length > 1) {
+    dr = globals.selected[1].r - globals.selected[0].r;
+    dc = globals.selected[1].c - globals.selected[0].c;
+    last_r = globals.selected[globals.selected.length-1].r;
+    last_c = globals.selected[globals.selected.length-1].c;
     if (r - last_r == dr && c - last_c == dc) {
       return true;
     }
@@ -57,36 +45,30 @@ function maySelect(r, c) {
 }
 
 function flickerButton(r, c, style) {
-  for (i = 0; i < selected.length; i++) {
-    if (selected[i].r == r && selected[i].c == c) {
-      g_buttons[r][c].setAttribute("style", button_styles["selected"]);
+  for (i = 0; i < globals.selected.length; i++) {
+    if (globals.selected[i].r == r && globals.selected[i].c == c) {
+      globals.buttons[r][c].setAttribute("style", globals.styles["button-selected"]);
       return;
     }
   }
-  if (style == 'over') {
-    g_buttons[r][c].setAttribute("style", button_styles["over"]);
-    return;
-  }
-  if (style == 'out') {
-    g_buttons[r][c].setAttribute("style", button_styles["out"]);
-    return;
-  }
+  globals.buttons[r][c].setAttribute("style", globals.styles[style]);
+  return;
 }
 
 function deselectAll() {
-  selected = [];
-  for (i = 0; i < selected_buttons.length; i++) {
-    selected_buttons[i].setAttribute("style", button_styles["out"]);
+  globals.selected = [];
+  for (i = 0; i < globals.selected_buttons.length; i++) {
+    globals.selected_buttons[i].setAttribute("style", globals.styles["button-out"]);
   }
-  selected_buttons = [];
-  g_word = '';
+  globals.selected_buttons = [];
+  globals.word = '';
 }
 
 function getButtonCenter(r, c) {
-  button_x = parseFloat(g_buttons[r][c].getAttribute("x"));
-  button_y = parseFloat(g_buttons[r][c].getAttribute("y"));
-  button_w = parseFloat(g_buttons[r][c].getAttribute("width"));
-  button_h = parseFloat(g_buttons[r][c].getAttribute("height"));
+  button_x = parseFloat(globals.buttons[r][c].getAttribute("x"));
+  button_y = parseFloat(globals.buttons[r][c].getAttribute("y"));
+  button_w = parseFloat(globals.buttons[r][c].getAttribute("width"));
+  button_h = parseFloat(globals.buttons[r][c].getAttribute("height"));
   return {
     x: button_x + button_w / 2,
     y: button_y + button_h / 2
@@ -104,12 +86,12 @@ function rotate(x, y, x0, y0, theta) {
 function highlightFrame(x1, y1, x2, y2, radius, angle) {
   points = [];
   points.push([x1, y1, 0, -radius]);
-  for (i = -Math.PI / 2; i > -3 * Math.PI / 2; i -= 0.1) {
+  for (i = -Math.PI / 2; i > -3 * Math.PI / 2; i -= .1) {
     points.push([x1, y1, radius * Math.cos(i), radius * Math.sin(i)]);
   }
   points.push([x1, y1, 0, radius]);
   points.push([x2, y2, 0, radius]);
-  for (i = Math.PI / 2; i > -Math.PI / 2; i -= 0.1) {
+  for (i = Math.PI / 2; i > -Math.PI / 2; i -= .1) {
     points.push([x2, y2, radius * Math.cos(i), radius * Math.sin(i)]);
   }
   points.push([x2, y2, 0, -radius]);
@@ -119,7 +101,7 @@ function highlightFrame(x1, y1, x2, y2, radius, angle) {
     from = rotate(points[i][0] + points[i][2], points[i][1] + points[i][3], points[i][0], points[i][1], angle);
     to = rotate(points[i+1][0] + points[i+1][2], points[i+1][1] + points[i+1][3], points[i+1][0], points[i+1][1], angle);
     lines.push(document.createElementNS("http://www.w3.org/2000/svg", "line"));
-    lines[lines.length-1].setAttribute("style", "stroke:black;stroke-width:1px");
+    lines[lines.length-1].setAttribute("style", globals.styles["word-highlight"]);
     lines[lines.length-1].setAttribute("x1", from.x + "cm");
     lines[lines.length-1].setAttribute("y1", from.y + "cm");
     lines[lines.length-1].setAttribute("x2", to.x + "cm");
@@ -129,10 +111,10 @@ function highlightFrame(x1, y1, x2, y2, radius, angle) {
 }
 
 function highlightWord() {
-  r1 = selected[0].r;
-  c1 = selected[0].c;
-  r2 = selected[selected.length - 1].r;
-  c2 = selected[selected.length - 1].c;
+  r1 = globals.selected[0].r;
+  c1 = globals.selected[0].c;
+  r2 = globals.selected[globals.selected.length - 1].r;
+  c2 = globals.selected[globals.selected.length - 1].c;
   centerButton1 = getButtonCenter(r1, c1);
   centerButton2 = getButtonCenter(r2, c2);
   if (centerButton1.y == centerButton2.y) {
@@ -178,71 +160,67 @@ function highlightWord() {
       }
     }
   }
-  frame = highlightFrame(from.x, from.y, to.x, to.y, cell_size * 0.4, angle);
+  frame = highlightFrame(from.x, from.y, to.x, to.y, globals.cell_size * .4, angle);
   for (i = 0; i < frame.length; i++) {
-    svg.appendChild(frame[i]);
+    globals.svg.appendChild(frame[i]);
   }
 }
 
 function recordLetter(r, c, letter) {
   deselect = false;
   if (!maySelect(r, c)) {
-    if (selected.length == 1 && r == selected[0].r && c == selected[0].c) {
+    if (globals.selected.length == 1 && r == globals.selected[0].r && c == globals.selected[0].c) {
       deselect = true;
     }
     deselectAll();
   }
   if (!deselect) {
-    selected.push({r: r, c: c});
-    selected_buttons.push(g_buttons[r][c]);
-    flickerButton(r, c, 'selected');
-    g_word += letter;
-    if (g_wordbank[g_word] != undefined) {
+    globals.selected.push({r: r, c: c});
+    globals.selected_buttons.push(globals.buttons[r][c]);
+    flickerButton(r, c, 'button-selected');
+    globals.word += letter;
+    if (globals.wordbank[globals.word] != undefined) {
       highlightWord();
-      g_wordbank[g_word].setAttribute("style", "text-decoration:line-through");
+      globals.wordbank[globals.word].setAttribute("style", globals.styles["word-crossout"]);
       deselectAll();
     }
   }
 }
 
 function render(words, puzzle) {
-  var wordbank_max_rows = 1;
-  var wordbank_max_cols = 3;
-  var wordbank_row = 0;
-  var wordbank_col = 0;
-  var wordbank_font_size = 0.6;
-  var wordbank_height = wordbank_max_rows * Math.ceil(words.length / (wordbank_max_rows * wordbank_max_cols)) * wordbank_font_size;
-  var grid = []; var letters = []; var buttons = [];
-  var x_margin = 1; var y_margin = 1;
-  var x = x_margin; var y = y_margin;
-  var svg_width = (puzzle[0].length + 1) * cell_size + x_margin * 2;
-  var svg_height = (puzzle.length + 1) * cell_size + y_margin * 2 + wordbank_height + 1;
-  //var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("width", svg_width + "cm");
-  svg.setAttribute("height", svg_height + "cm");
-  document.body.appendChild(svg);
+  var grid = [];
+  var letters = [];
+  var buttons = [];
+  var x = globals.puzzle_margin_x;
+  var y = globals.puzzle_margin_y;
+  var wordbank_height = globals.wb_max_rows * Math.ceil(words.length / (globals.wb_max_rows * globals.wb_max_cols)) * globals.wb_font_size;
+  var svg_width = (puzzle[0].length + 1) * globals.cell_size + globals.puzzle_margin_x * 2;
+  var svg_height = (puzzle.length + 1) * globals.cell_size + globals.puzzle_margin_y * 2 + wordbank_height + 1;
+  globals.svg.setAttribute("width", svg_width + "cm");
+  globals.svg.setAttribute("height", svg_height + "cm");
+  document.body.appendChild(globals.svg);
   for (r = 0; r < puzzle.length; r++) {
-    x = x_margin;
+    x = globals.puzzle_margin_x;
     grid.push([]); letters.push([]); buttons.push([]);
     for (c = 0; c < puzzle[r].length; c++) {
       grid[grid.length - 1].push(document.createElementNS("http://www.w3.org/2000/svg", "rect"));
       grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("x", x + "cm");
       grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("y", y + "cm");
-      grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("width", cell_size + "cm");
-      grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("height", cell_size + "cm");
+      grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("width", globals.cell_size + "cm");
+      grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("height", globals.cell_size + "cm");
       grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("shape-rendering", "crispEdges");
       if (r * c != 0) {
-        grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("style", "fill:white;stroke:black;stroke-width:1px");
+        grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("style", globals.styles["grid-board"]);
       } else {
-        grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("style", "fill:white;stroke:black;stroke-width:0px");
+        grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("style", globals.styles["grid-header"]);
       }
       letters[letters.length - 1].push(document.createElementNS("http://www.w3.org/2000/svg", "text"));
-      letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("x", x + cell_size / 2 + "cm");
-      letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("y", y + cell_size / 2 + "cm");
+      letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("x", x + globals.cell_size / 2 + "cm");
+      letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("y", y + globals.cell_size / 2 + "cm");
       if (r * c != 0) {
-        letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("font-size", font_size + "cm");
+        letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("font-size", globals.font_size + "cm");
       } else {
-        letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("font-size", font_size / 2 + "cm");
+        letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("font-size", globals.font_size / 2 + "cm");
       }
       letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("dominant-baseline", "middle");
       letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("text-anchor", "middle");
@@ -250,50 +228,52 @@ function render(words, puzzle) {
       buttons[buttons.length - 1].push(document.createElementNS("http://www.w3.org/2000/svg", "rect"));
       buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("x", x + "cm");
       buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("y", y + "cm");
-      buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("width", cell_size + "cm");
-      buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("height", cell_size + "cm");
-      buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("style", "fill:white;opacity:0%;stroke-width:0px");
+      buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("width", globals.cell_size + "cm");
+      buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("height", globals.cell_size + "cm");
+      buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("style", globals.styles["button-out"]);
       if (r * c != 0) {
-        buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmouseover", "flickerButton(" + r + ", " + c + ", \"over\");");
-        buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmouseout", "flickerButton(" + r + ", " + c + ", \"out\");");
+        buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmouseover", "flickerButton(" + r + ", " + c + ", \"button-over\");");
+        buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmouseout", "flickerButton(" + r + ", " + c + ", \"button-out\");");
         buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmousedown", "recordLetter(" + r + ", " + c + ", \"" + puzzle[r][c] + "\");");
       }
-      svg.appendChild(grid[grid.length - 1][grid[grid.length - 1].length - 1]);
-      svg.appendChild(letters[letters.length - 1][letters[letters.length - 1].length - 1]);
-      svg.appendChild(buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1]);
-      x += cell_size;
+      globals.svg.appendChild(grid[grid.length - 1][grid[grid.length - 1].length - 1]);
+      globals.svg.appendChild(letters[letters.length - 1][letters[letters.length - 1].length - 1]);
+      globals.svg.appendChild(buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1]);
+      x += globals.cell_size;
     }
-    y += cell_size;
+    y += globals.cell_size;
   }
   var frame = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  frame.setAttribute("width", (puzzle[0].length + 1) * cell_size + x_margin * 2 + "cm");
-  frame.setAttribute("height", (puzzle.length + 1) * cell_size + x_margin * 2 + "cm");
-  frame.setAttribute("style", "fill:none;stroke:black;stroke-width:1px");
-  frame.setAttribute("rx", "10");
-  frame.setAttribute("ry", "10");
-  svg.appendChild(frame);
+  frame.setAttribute("width", (puzzle[0].length + 1) * globals.cell_size + globals.puzzle_margin_x * 2 + "cm");
+  frame.setAttribute("height", (puzzle.length + 1) * globals.cell_size + globals.puzzle_margin_x * 2 + "cm");
+  frame.setAttribute("style", globals.styles["grid-frame"]);
+  frame.setAttribute("rx", globals.frame_rx);
+  frame.setAttribute("ry", globals.frame_ry);
+  globals.svg.appendChild(frame);
 
   var wordbank = {};
   var wordbank_group = 0;
+  var wordbank_row = 0;
+  var wordbank_col = 0;
   for (i = 0; i < words.length; i++) {
     word = words[i];
     wordbank[word] = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    wordbank[word].setAttribute("x", wordbank_col * svg_width / wordbank_max_cols + "cm");
-    wordbank[word].setAttribute("y", cell_size * puzzle.length + 4 + wordbank_row * wordbank_font_size + "cm");
-    wordbank[word].setAttribute("font-size", wordbank_font_size + "cm");
+    wordbank[word].setAttribute("x", wordbank_col * svg_width / globals.wb_max_cols + "cm");
+    wordbank[word].setAttribute("y", globals.cell_size * puzzle.length + 4 + wordbank_row * globals.wb_font_size + "cm");
+    wordbank[word].setAttribute("font-size", globals.wb_font_size + "cm");
     wordbank[word].appendChild(document.createTextNode(word));
-    svg.appendChild(wordbank[word]);
+    globals.svg.appendChild(wordbank[word]);
     wordbank_row += 1;
-    if (wordbank_row == (wordbank_group + 1) * wordbank_max_rows) {
+    if (wordbank_row == (wordbank_group + 1) * globals.wb_max_rows) {
       wordbank_col += 1;
-      wordbank_row = wordbank_group * wordbank_max_rows;
+      wordbank_row = wordbank_group * globals.wb_max_rows;
     }
-    if (wordbank_col == wordbank_max_cols) {
+    if (wordbank_col == globals.wb_max_cols) {
       wordbank_col = 0;
       wordbank_group += 1;
-      wordbank_row += wordbank_max_rows;
+      wordbank_row += globals.wb_max_rows;
     }
   }
-  g_wordbank = wordbank;
-  g_buttons = buttons;
+  globals.wordbank = wordbank;
+  globals.buttons = buttons;
 }
