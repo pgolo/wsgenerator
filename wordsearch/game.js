@@ -101,18 +101,19 @@ function rotate(x, y, x0, y0, theta) {
   };
 }
 
-function highlightFrame(x1, y1, x2, y2, y_offset, x_offset, angle) {
-  points = [
-    [x1,  y1, -x_offset,                -y_offset],
-    [x1,  y1, -x_offset-0.1*cell_size,  -y_offset+0.1*cell_size],
-    [x1,  y1, -x_offset-0.1*cell_size,   y_offset-0.1*cell_size],
-    [x1,  y1, -x_offset,                 y_offset],
-    [x2,  y2,  x_offset,                 y_offset],
-    [x2,  y2,  x_offset+0.1*cell_size,   y_offset-0.1*cell_size],
-    [x2,  y2,  x_offset+0.1*cell_size,  -y_offset+0.1*cell_size],
-    [x2,  y2,  x_offset,                -y_offset],
-    [x1,  y1, -x_offset,                -y_offset]
-  ];
+function highlightFrame(x1, y1, x2, y2, radius, angle) {
+  points = [];
+  points.push([x1, y1, 0, -radius]);
+  for (i = -Math.PI / 2; i > -3 * Math.PI / 2; i -= 0.1) {
+    points.push([x1, y1, radius * Math.cos(i), radius * Math.sin(i)]);
+  }
+  points.push([x1, y1, 0, radius]);
+  points.push([x2, y2, 0, radius]);
+  for (i = Math.PI / 2; i > -Math.PI / 2; i -= 0.1) {
+    points.push([x2, y2, radius * Math.cos(i), radius * Math.sin(i)]);
+  }
+  points.push([x2, y2, 0, -radius]);
+  points.push([x1, y1, 0, -radius]);
   lines = [];
   for (i = 0; i < points.length - 1; i++) {
     from = rotate(points[i][0] + points[i][2], points[i][1] + points[i][3], points[i][0], points[i][1], angle);
@@ -177,7 +178,7 @@ function highlightWord() {
       }
     }
   }
-  frame = highlightFrame(from.x, from.y, to.x, to.y, cell_size * 0.4, cell_size * 0.3, angle);
+  frame = highlightFrame(from.x, from.y, to.x, to.y, cell_size * 0.4, angle);
   for (i = 0; i < frame.length; i++) {
     svg.appendChild(frame[i]);
   }
