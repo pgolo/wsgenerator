@@ -93,67 +93,38 @@ function getButtonCenter(r, c) {
   };
 }
 
-function highlightFrame(x1, y1, x2, y2, height, margin) {
+function rotate(x, y, x0, y0, theta) {
+  theta = (theta - 0) * Math.PI / 180;
+  return {
+    x: (x - x0) * Math.cos(theta) + (y - y0) * Math.sin(theta) + x0,
+    y: -(x - x0) * Math.sin(theta) + (y - y0) * Math.cos(theta) + y0
+  };
+}
 
-  l1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  l2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  l3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  l4 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  l5 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  l6 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  l7 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  l8 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-
-  l1.setAttribute("style", "stroke:black;stroke-width:1px");
-  l2.setAttribute("style", "stroke:black;stroke-width:1px");
-  l3.setAttribute("style", "stroke:black;stroke-width:1px");
-  l4.setAttribute("style", "stroke:black;stroke-width:1px");
-  l5.setAttribute("style", "stroke:black;stroke-width:1px");
-  l6.setAttribute("style", "stroke:black;stroke-width:1px");
-  l7.setAttribute("style", "stroke:black;stroke-width:1px");
-  l8.setAttribute("style", "stroke:black;stroke-width:1px");
-
-  l1.setAttribute("x1", Math.min(centerButton1.x, centerButton2.x) - margin + "cm");
-  l1.setAttribute("y1", centerButton1.y - height / 2 + "cm");
-  l1.setAttribute("x2", Math.max(centerButton1.x, centerButton2.x) + margin + "cm");
-  l1.setAttribute("y2", centerButton1.y - height / 2 + "cm");
-
-  l2.setAttribute("x1", Math.min(centerButton1.x, centerButton2.x) - margin + "cm");
-  l2.setAttribute("y1", centerButton1.y + height / 2 + "cm");
-  l2.setAttribute("x2", Math.max(centerButton1.x, centerButton2.x) + margin + "cm");
-  l2.setAttribute("y2", centerButton1.y + height / 2 + "cm");
-
-  l3.setAttribute("x1", l1.getAttribute("x1"));
-  l3.setAttribute("y1", l1.getAttribute("y1"));
-  l3.setAttribute("x2", Math.min(centerButton1.x, centerButton2.x) - margin - 0.1 + "cm");
-  l3.setAttribute("y2", centerButton1.y - height / 2 + 0.1 + "cm");
-
-  l4.setAttribute("x1", l3.getAttribute("x2"));
-  l4.setAttribute("y1", l3.getAttribute("y2"));
-  l4.setAttribute("x2", l4.getAttribute("x1"));
-  l4.setAttribute("y2", centerButton1.y + height / 2 - 0.1 + "cm");
-
-  l5.setAttribute("x1", l4.getAttribute("x2"));
-  l5.setAttribute("y1", l4.getAttribute("y2"));
-  l5.setAttribute("x2", l2.getAttribute("x1"));
-  l5.setAttribute("y2", l2.getAttribute("y1"));
-
-  l6.setAttribute("x1", l1.getAttribute("x2"));
-  l6.setAttribute("y1", l1.getAttribute("y2"));
-  l6.setAttribute("x2", Math.max(centerButton1.x, centerButton2.x) + margin + 0.1 + "cm");
-  l6.setAttribute("y2", centerButton1.y - height / 2 + 0.1 + "cm");
-
-  l7.setAttribute("x1", l6.getAttribute("x2"));
-  l7.setAttribute("y1", l6.getAttribute("y2"));
-  l7.setAttribute("x2", l7.getAttribute("x1"));
-  l7.setAttribute("y2", centerButton1.y + height / 2 - 0.1 + "cm");
-
-  l8.setAttribute("x1", l7.getAttribute("x2"));
-  l8.setAttribute("y1", l7.getAttribute("y2"));
-  l8.setAttribute("x2", l2.getAttribute("x2"));
-  l8.setAttribute("y2", l2.getAttribute("y2"));
-
-  return [l1, l2, l3, l4, l5, l6, l7, l8];
+function highlightFrame(x1, y1, x2, y2, y_offset, x_offset, angle) {
+  points = [
+    [x1,  y1, -x_offset,      -y_offset],
+    [x1,  y1, -x_offset-0.1,  -y_offset+0.1],
+    [x1,  y1, -x_offset-0.1,   y_offset-0.1],
+    [x1,  y1, -x_offset,       y_offset],
+    [x2,  y2,  x_offset,       y_offset],
+    [x2,  y2,  x_offset+0.1,   y_offset-0.1],
+    [x2,  y2,  x_offset+0.1,  -y_offset+0.1],
+    [x2,  y2,  x_offset,      -y_offset],
+    [x1,  y1, -x_offset,      -y_offset]
+  ];
+  lines = [];
+  for (i = 0; i < points.length - 1; i++) {
+    from = rotate(points[i][0] + points[i][2], points[i][1] + points[i][3], points[i][0], points[i][1], angle);
+    to = rotate(points[i+1][0] + points[i+1][2], points[i+1][1] + points[i+1][3], points[i+1][0], points[i+1][1], angle);
+    lines.push(document.createElementNS("http://www.w3.org/2000/svg", "line"));
+    lines[lines.length-1].setAttribute("style", "stroke:black;stroke-width:1px");
+    lines[lines.length-1].setAttribute("x1", from.x + "cm");
+    lines[lines.length-1].setAttribute("y1", from.y + "cm");
+    lines[lines.length-1].setAttribute("x2", to.x + "cm");
+    lines[lines.length-1].setAttribute("y2", to.y + "cm");
+  }
+  return lines;
 }
 
 function highlightWord() {
@@ -163,43 +134,50 @@ function highlightWord() {
   c2 = selected[selected.length - 1].c;
   centerButton1 = getButtonCenter(r1, c1);
   centerButton2 = getButtonCenter(r2, c2);
-
-
-  
   if (centerButton1.y == centerButton2.y) {
     // horizontal
-
-    frame = highlightFrame(centerButton1.x, centerButton1.y, centerButton2.x, centerButton2.y, cell_size * 0.8, cell_size * 0.3);
-
+    angle = 0;
+    if (centerButton1.x < centerButton2.x) {
+      from = centerButton1;
+      to = centerButton2;
+    }
+    else {
+      from = centerButton2;
+      to = centerButton1;
+    }
   }
   else {
     if (centerButton1.x == centerButton2.x) {
       // vertical
-      // rrr.setAttribute("x", centerButton1.x + "cm");
-      // rrr.setAttribute("y", Math.min(centerButton1.y, centerButton2.y) + "cm");
-      // rrr.setAttribute("width", "0.3cm");
-      // rrr.setAttribute("height", Math.abs(centerButton1.y - centerButton2.y) + "cm");
+      angle = -90;
+      if (centerButton1.y < centerButton2.y) {
+        from = centerButton1;
+        to = centerButton2;
+      }
+      else {
+        from = centerButton2;
+        to = centerButton1;
+      }
     }
     else {
       // diagonal
-      // rrr.setAttribute("width", Math.sqrt((centerButton1.x - centerButton2.x) ** 2 + (centerButton1.y - centerButton2.y) ** 2) + "cm");
-      // rrr.setAttribute("height", "0.3cm");
-      // rrr.setAttribute("x", "0cm");
-      // rrr.setAttribute("y", "0cm");
       if (centerButton1.x < centerButton2.x) {
-        origin = centerButton1;
+        from = centerButton1;
+        to = centerButton2;
       }
       else {
-        origin = centerButton2;
+        from = centerButton2;
+        to = centerButton1;
       }
-      frame = highlightFrame(centerButton1.x, centerButton1.y, centerButton2.x, centerButton2.y, cell_size * 0.8, cell_size * 0.3);
-      // rrr.setAttribute("transform", "rotate(45)");
-      // rrr.setAttribute("x", Math.sqrt(origin.x ** 2 + origin.y ** 2) + "cm");
-      //rrr.setAttribute("y", origin.y + "cm");
-      //alert(rrr.getAttribute("width"));
+      if (from.y < to.y) {
+        angle = -45;
+      }
+      else {
+        angle = 45;
+      }
     }
   }
-  
+  frame = highlightFrame(from.x, from.y, to.x, to.y, cell_size * 0.4, cell_size * 0.3, angle);
   for (i = 0; i < frame.length; i++) {
     svg.appendChild(frame[i]);
   }
