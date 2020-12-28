@@ -103,15 +103,15 @@ function rotate(x, y, x0, y0, theta) {
 
 function highlightFrame(x1, y1, x2, y2, y_offset, x_offset, angle) {
   points = [
-    [x1,  y1, -x_offset,      -y_offset],
-    [x1,  y1, -x_offset-0.1,  -y_offset+0.1],
-    [x1,  y1, -x_offset-0.1,   y_offset-0.1],
-    [x1,  y1, -x_offset,       y_offset],
-    [x2,  y2,  x_offset,       y_offset],
-    [x2,  y2,  x_offset+0.1,   y_offset-0.1],
-    [x2,  y2,  x_offset+0.1,  -y_offset+0.1],
-    [x2,  y2,  x_offset,      -y_offset],
-    [x1,  y1, -x_offset,      -y_offset]
+    [x1,  y1, -x_offset,                -y_offset],
+    [x1,  y1, -x_offset-0.1*cell_size,  -y_offset+0.1*cell_size],
+    [x1,  y1, -x_offset-0.1*cell_size,   y_offset-0.1*cell_size],
+    [x1,  y1, -x_offset,                 y_offset],
+    [x2,  y2,  x_offset,                 y_offset],
+    [x2,  y2,  x_offset+0.1*cell_size,   y_offset-0.1*cell_size],
+    [x2,  y2,  x_offset+0.1*cell_size,  -y_offset+0.1*cell_size],
+    [x2,  y2,  x_offset,                -y_offset],
+    [x1,  y1, -x_offset,                -y_offset]
   ];
   lines = [];
   for (i = 0; i < points.length - 1; i++) {
