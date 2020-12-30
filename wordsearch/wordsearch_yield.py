@@ -17,8 +17,7 @@ def placements(grid, words, grid_height, grid_width, points):
                 solution[this_y][this_x] = letters[i]
             if not_fit:
                 continue
-            return solution, y, x, direction, letters
-    return [], None, None, None, None
+            yield solution, y, x, direction, letters
 
 def trace_grids(grid, words, word_index, grid_height, grid_width, hints, points):
     word = words[word_index]
@@ -27,10 +26,10 @@ def trace_grids(grid, words, word_index, grid_height, grid_width, hints, points)
     random.shuffle(_words)
     random.shuffle(_points)
     while True:
-        solution, y, x, direction, letters = placements(grid, _words, grid_height, grid_width, _points)
-        if solution:
+        try:
+            solution, y, x, direction, letters = next(placements(grid, _words, grid_height, grid_width, _points))
             hints[word] = (y, x, direction, letters)
-        else:
+        except StopIteration:
             return [], None, None, None, None
         if word_index < len(words) - 1:
             temp, _, _, _, _ = trace_grids(solution, words, word_index + 1, grid_height, grid_width, hints, points)
