@@ -23,7 +23,7 @@ def placements(grid, words, grid_height, grid_width, points):
 def trace_grids(grid, words, word_index, grid_height, grid_width, hints, points):
     word = words[word_index]
     _words = [word, ''.join(reversed(word))]
-    _points = list(points)
+    _points = [point for point in points if grid[point[1]][point[0]] != '#']
     random.shuffle(_words)
     random.shuffle(_points)
     while True:
