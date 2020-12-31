@@ -188,6 +188,18 @@ function recordLetter(r, c, letter) {
 }
 
 function render(words, puzzle) {
+  if (puzzle.length == 0) {
+    message = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    message.setAttribute("x", "1cm");
+    message.setAttribute("y", "0cm");
+    message.setAttribute("font-size", globals.font_size + "cm");
+    message.setAttribute("dominant-baseline", "hanging");
+    message.setAttribute("text-anchor", "start");
+    message.appendChild(document.createTextNode("Puzzle came empty :("));
+    globals.svg.appendChild(message);
+    document.body.appendChild(globals.svg);
+    return;
+  }
   var grid = [];
   var letters = [];
   var buttons = [];
@@ -209,7 +221,7 @@ function render(words, puzzle) {
       grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("width", globals.cell_size + "cm");
       grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("height", globals.cell_size + "cm");
       grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("shape-rendering", "crispEdges");
-      if (r * c != 0) {
+      if (r * c != 0 && puzzle[r][c] != "#") {
         grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("style", globals.styles["grid-board"]);
       } else {
         grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("style", globals.styles["grid-header"]);
@@ -224,14 +236,16 @@ function render(words, puzzle) {
       }
       letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("dominant-baseline", "middle");
       letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("text-anchor", "middle");
-      letters[letters.length - 1][letters[letters.length - 1].length - 1].appendChild(document.createTextNode(puzzle[r][c]));
+      if (puzzle[r][c] != "#") {
+        letters[letters.length - 1][letters[letters.length - 1].length - 1].appendChild(document.createTextNode(puzzle[r][c]));
+      }
       buttons[buttons.length - 1].push(document.createElementNS("http://www.w3.org/2000/svg", "rect"));
       buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("x", x + "cm");
       buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("y", y + "cm");
       buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("width", globals.cell_size + "cm");
       buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("height", globals.cell_size + "cm");
       buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("style", globals.styles["button-out"]);
-      if (r * c != 0) {
+      if (r * c != 0 && puzzle[r][c] != "#") {
         buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmouseover", "flickerButton(" + r + ", " + c + ", \"button-over\");");
         buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmouseout", "flickerButton(" + r + ", " + c + ", \"button-out\");");
         buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmousedown", "recordLetter(" + r + ", " + c + ", \"" + puzzle[r][c] + "\");");

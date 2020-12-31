@@ -62,8 +62,7 @@ def translate_hints(hints):
         solution[word] = {'row': y, 'column': x, 'direction': direction_hint}
     return solution
 
-def make_puzzle(height, width, words):
-    grid = [['' for _ in range(width)] for _ in range(height)]
+def make_puzzle(height, width, words, grid):
     directions = [(0, 1), (1, 0), (1, -1), (1, 1)]
     points = [
         item for sublist in [
@@ -82,13 +81,44 @@ def make_puzzle(height, width, words):
     for row in solution:
         for i in range(len(row)):
             if row[i] == '':
-                row[i] = random.choice(string.ascii_letters)
-                #row[i] = ' '
+                row[i] = random.choice(string.ascii_letters) # ' '
             row[i] = row[i].upper()
     return solution, hints
 
-def pretty_puzzle(height, width, words):
-    puzzle, hints = make_puzzle(height, width, words)
+def check_template(c):
+    assert c in [' ', '.', '#'], 'Only "." or "#" characters are allowed in template'
+    return {' ': '#', '.': '#', '#': ''}[c]
+
+def pretty_puzzle(*args, **kwargs):
+    words = []
+    if 'words' in kwargs:
+        words = list(kwargs['words'])
+    words += list(args)
+    grid = None
+    height = None
+    width = None
+    if 'grid' in kwargs:
+        grid = kwargs['grid']
+    if 'template' in kwargs:
+        grid = [[check_template(cell) for cell in row] for row in kwargs['template'].strip('\n').split('\n')]
+        max_length = max([len(row) for row in grid])
+        for i in range(0, len(grid)):
+            diff = max_length - len(grid[i])
+            if diff <= 0:
+                continue
+            grid[i] += ['#'] * diff
+    if grid is not None:
+        height = len(grid)
+        width = len(grid[0])
+    if 'height' in kwargs:
+        height = kwargs['height']
+    if 'width' in kwargs:
+        width = kwargs['width']
+    assert len(words) > 0, 'No words to process'
+    assert grid is not None or (height is not None and width is not None), 'Grid paremeters are not specified'
+    if grid is None:
+        grid = [['' for _ in range(width)] for _ in range(height)]
+    puzzle, hints = make_puzzle(height, width, words, grid)
     if len(puzzle) == 0:
         return [], {}
     _pretty_puzzle = []
