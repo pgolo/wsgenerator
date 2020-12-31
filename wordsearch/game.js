@@ -10,6 +10,7 @@ var globals = {
   frame_ry: 10,
   word: '',
   wordbank: {},
+  found: [],
   buttons: [],
   selected: [],
   selected_buttons: [],
@@ -179,7 +180,8 @@ function recordLetter(r, c, letter) {
     globals.selected_buttons.push(globals.buttons[r][c]);
     flickerButton(r, c, 'button-selected');
     globals.word += letter;
-    if (globals.wordbank[globals.word] != undefined) {
+    if (globals.wordbank[globals.word] != undefined && !(globals.found.includes(globals.word))) {
+      globals.found.push(globals.word);
       highlightWord();
       globals.wordbank[globals.word].setAttribute("style", globals.styles["word-crossout"]);
       deselectAll();
