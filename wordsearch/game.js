@@ -189,84 +189,76 @@ function recordLetter(r, c, letter) {
   }
 }
 
-function render(words, puzzle) {
-  if (puzzle.length == 0) {
-    message = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    message.setAttribute("x", "1cm");
-    message.setAttribute("y", "0cm");
-    message.setAttribute("font-size", globals.font_size + "cm");
-    message.setAttribute("dominant-baseline", "hanging");
-    message.setAttribute("text-anchor", "start");
-    message.appendChild(document.createTextNode("Puzzle came empty :("));
-    globals.svg.appendChild(message);
-    document.body.appendChild(globals.svg);
-    return;
-  }
-  var grid = [];
-  var letters = [];
-  var buttons = [];
-  var x = globals.puzzle_margin_x;
-  var y = globals.puzzle_margin_y;
-  var wordbank_height = globals.wb_max_rows * Math.ceil(words.length / (globals.wb_max_rows * globals.wb_max_cols)) * globals.wb_font_size;
-  var svg_width = (puzzle[0].length + 1) * globals.cell_size + globals.puzzle_margin_x * 2;
-  var svg_height = (puzzle.length + 1) * globals.cell_size + globals.puzzle_margin_y * 2 + wordbank_height + 1;
-  globals.svg.setAttribute("width", svg_width + "cm");
-  globals.svg.setAttribute("height", svg_height + "cm");
+function noPuzzle() {
+  message = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  message.setAttribute("x", "1cm");
+  message.setAttribute("y", "0cm");
+  message.setAttribute("font-size", globals.font_size + "cm");
+  message.setAttribute("dominant-baseline", "hanging");
+  message.setAttribute("text-anchor", "start");
+  message.appendChild(document.createTextNode("Puzzle came empty :("));
+  globals.svg.appendChild(message);
   document.body.appendChild(globals.svg);
-  for (r = 0; r < puzzle.length; r++) {
-    x = globals.puzzle_margin_x;
-    grid.push([]); letters.push([]); buttons.push([]);
-    for (c = 0; c < puzzle[r].length; c++) {
-      grid[grid.length - 1].push(document.createElementNS("http://www.w3.org/2000/svg", "rect"));
-      grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("x", x + "cm");
-      grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("y", y + "cm");
-      grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("width", globals.cell_size + "cm");
-      grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("height", globals.cell_size + "cm");
-      grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("shape-rendering", "crispEdges");
-      if (r * c != 0 && puzzle[r][c] != "#") {
-        grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("style", globals.styles["grid-board"]);
-      } else {
-        grid[grid.length - 1][grid[grid.length - 1].length - 1].setAttribute("style", globals.styles["grid-header"]);
-      }
-      letters[letters.length - 1].push(document.createElementNS("http://www.w3.org/2000/svg", "text"));
-      letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("x", x + globals.cell_size / 2 + "cm");
-      letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("y", y + globals.cell_size / 2 + "cm");
-      if (r * c != 0) {
-        letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("font-size", globals.font_size + "cm");
-      } else {
-        letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("font-size", globals.font_size / 2 + "cm");
-      }
-      letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("dominant-baseline", "middle");
-      letters[letters.length - 1][letters[letters.length - 1].length - 1].setAttribute("text-anchor", "middle");
-      if (puzzle[r][c] != "#") {
-        letters[letters.length - 1][letters[letters.length - 1].length - 1].appendChild(document.createTextNode(puzzle[r][c]));
-      }
-      buttons[buttons.length - 1].push(document.createElementNS("http://www.w3.org/2000/svg", "rect"));
-      buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("x", x + "cm");
-      buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("y", y + "cm");
-      buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("width", globals.cell_size + "cm");
-      buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("height", globals.cell_size + "cm");
-      buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("style", globals.styles["button-out"]);
-      if (r * c != 0 && puzzle[r][c] != "#") {
-        buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmouseover", "flickerButton(" + r + ", " + c + ", \"button-over\");");
-        buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmouseout", "flickerButton(" + r + ", " + c + ", \"button-out\");");
-        buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1].setAttribute("onmousedown", "recordLetter(" + r + ", " + c + ", \"" + puzzle[r][c] + "\");");
-      }
-      globals.svg.appendChild(grid[grid.length - 1][grid[grid.length - 1].length - 1]);
-      globals.svg.appendChild(letters[letters.length - 1][letters[letters.length - 1].length - 1]);
-      globals.svg.appendChild(buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1]);
-      x += globals.cell_size;
-    }
-    y += globals.cell_size;
+}
+
+function renderCell(grid, n, m, x, y, puzzle, r, c) {
+  grid[n][m].setAttribute("x", x + "cm");
+  grid[n][m].setAttribute("y", y + "cm");
+  grid[n][m].setAttribute("width", globals.cell_size + "cm");
+  grid[n][m].setAttribute("height", globals.cell_size + "cm");
+  grid[n][m].setAttribute("shape-rendering", "crispEdges");
+  if (r * c != 0 && puzzle[r][c] != "#") {
+    grid[n][m].setAttribute("style", globals.styles["grid-board"]);
+  } else {
+    grid[n][m].setAttribute("style", globals.styles["grid-header"]);
   }
+}
+
+function renderLetter(letters, n, m, x, y, puzzle, r, c) {
+  letters[n][m].setAttribute("x", x + globals.cell_size / 2 + "cm");
+  letters[n][m].setAttribute("y", y + globals.cell_size / 2 + "cm");
+  if (r * c != 0) {
+    letters[n][m].setAttribute("font-size", globals.font_size + "cm");
+  } else {
+    letters[n][m].setAttribute("font-size", globals.font_size / 2 + "cm");
+  }
+  letters[n][m].setAttribute("dominant-baseline", "middle");
+  letters[n][m].setAttribute("text-anchor", "middle");
+  if (puzzle[r][c] != "#") {
+    letters[n][m].appendChild(document.createTextNode(puzzle[r][c]));
+  }
+}
+
+function renderButton(buttons, n, m, x, y, puzzle, r, c) {
+  buttons[n][m].setAttribute("x", x + "cm");
+  buttons[n][m].setAttribute("y", y + "cm");
+  buttons[n][m].setAttribute("width", globals.cell_size + "cm");
+  buttons[n][m].setAttribute("height", globals.cell_size + "cm");
+  buttons[n][m].setAttribute("style", globals.styles["button-out"]);
+  if (r * c != 0 && puzzle[r][c] != "#") {
+    buttons[n][m].setAttribute("onmouseover", "flickerButton(" + r + ", " + c + ", \"button-over\");");
+    buttons[n][m].setAttribute("onmouseout", "flickerButton(" + r + ", " + c + ", \"button-out\");");
+    buttons[n][m].setAttribute("onmousedown", "recordLetter(" + r + ", " + c + ", \"" + puzzle[r][c] + "\");");
+  }
+}
+
+function renderLastElement(item, fn, x, y, puzzle, r, c) {
+  n = item.length - 1;
+  m = item[n].length - 1;
+  fn(item, n, m, x, y, puzzle, r, c);
+}
+
+function renderFrame(puzzle_width, puzzle_height) {
   var frame = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  frame.setAttribute("width", (puzzle[0].length + 1) * globals.cell_size + globals.puzzle_margin_x * 2 + "cm");
-  frame.setAttribute("height", (puzzle.length + 1) * globals.cell_size + globals.puzzle_margin_x * 2 + "cm");
+  frame.setAttribute("width", (puzzle_width + 1) * globals.cell_size + globals.puzzle_margin_x * 2 + "cm");
+  frame.setAttribute("height", (puzzle_height + 1) * globals.cell_size + globals.puzzle_margin_x * 2 + "cm");
   frame.setAttribute("style", globals.styles["grid-frame"]);
   frame.setAttribute("rx", globals.frame_rx);
   frame.setAttribute("ry", globals.frame_ry);
   globals.svg.appendChild(frame);
+}
 
+function renderWordbank(words, svg_width, puzzle_height) {
   var wordbank = {};
   var wordbank_group = 0;
   var wordbank_row = 0;
@@ -275,7 +267,7 @@ function render(words, puzzle) {
     word = words[i];
     wordbank[word] = document.createElementNS("http://www.w3.org/2000/svg", "text");
     wordbank[word].setAttribute("x", wordbank_col * svg_width / globals.wb_max_cols + "cm");
-    wordbank[word].setAttribute("y", globals.cell_size * puzzle.length + 4 + wordbank_row * globals.wb_font_size + "cm");
+    wordbank[word].setAttribute("y", globals.cell_size * puzzle_height + 4 + wordbank_row * globals.wb_font_size + "cm");
     wordbank[word].setAttribute("font-size", globals.wb_font_size + "cm");
     wordbank[word].appendChild(document.createTextNode(word));
     globals.svg.appendChild(wordbank[word]);
@@ -290,6 +282,78 @@ function render(words, puzzle) {
       wordbank_row += globals.wb_max_rows;
     }
   }
-  globals.wordbank = wordbank;
+  return wordbank;
+}
+
+function render(words, puzzle) {
+  if (puzzle.length == 0) {
+    return noPuzzle();
+  }
+  var grid = [];
+  var letters = [];
+  var buttons = [];
+  var x = globals.puzzle_margin_x;
+  var y = globals.puzzle_margin_y;
+  var wordbank_height = globals.wb_max_rows * Math.ceil(words.length / (globals.wb_max_rows * globals.wb_max_cols)) * globals.wb_font_size;
+  var puzzle_width = puzzle[0].length;
+  var puzzle_height = puzzle.length;
+  var svg_width = (puzzle_width + 1) * globals.cell_size + globals.puzzle_margin_x * 2;
+  var svg_height = (puzzle_height + 1) * globals.cell_size + globals.puzzle_margin_y * 2 + wordbank_height + 1;
+  globals.svg.setAttribute("width", svg_width + "cm");
+  globals.svg.setAttribute("height", svg_height + "cm");
+  document.body.appendChild(globals.svg);
+  for (r = 0; r < puzzle.length; r++) {
+    x = globals.puzzle_margin_x;
+    grid.push([]); letters.push([]); buttons.push([]);
+    for (c = 0; c < puzzle[r].length; c++) {
+      grid[grid.length - 1].push(document.createElementNS("http://www.w3.org/2000/svg", "rect"));
+      renderLastElement(grid, renderCell, x, y, puzzle, r, c);
+      letters[letters.length - 1].push(document.createElementNS("http://www.w3.org/2000/svg", "text"));
+      renderLastElement(letters, renderLetter, x, y, puzzle, r, c);
+      buttons[buttons.length - 1].push(document.createElementNS("http://www.w3.org/2000/svg", "rect"));
+      renderLastElement(buttons, renderButton, x, y, puzzle, r, c);
+      globals.svg.appendChild(grid[grid.length - 1][grid[grid.length - 1].length - 1]);
+      globals.svg.appendChild(letters[letters.length - 1][letters[letters.length - 1].length - 1]);
+      globals.svg.appendChild(buttons[buttons.length - 1][buttons[buttons.length - 1].length - 1]);
+      x += globals.cell_size;
+    }
+    y += globals.cell_size;
+  }
   globals.buttons = buttons;
+
+  //renderFrame(puzzle_width, svg_width, puzzle_height);
+  var frame = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  frame.setAttribute("width", (puzzle_width + 1) * globals.cell_size + globals.puzzle_margin_x * 2 + "cm");
+  frame.setAttribute("height", (puzzle_height + 1) * globals.cell_size + globals.puzzle_margin_x * 2 + "cm");
+  frame.setAttribute("style", globals.styles["grid-frame"]);
+  frame.setAttribute("rx", globals.frame_rx);
+  frame.setAttribute("ry", globals.frame_ry);
+  globals.svg.appendChild(frame);
+
+  //globals.wordbank = renderWordbank(words, puzzle_height);
+  var wordbank = {};
+  var wordbank_group = 0;
+  var wordbank_row = 0;
+  var wordbank_col = 0;
+  for (i = 0; i < words.length; i++) {
+    word = words[i];
+    wordbank[word] = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    wordbank[word].setAttribute("x", wordbank_col * svg_width / globals.wb_max_cols + "cm");
+    wordbank[word].setAttribute("y", globals.cell_size * puzzle_height + 4 + wordbank_row * globals.wb_font_size + "cm");
+    wordbank[word].setAttribute("font-size", globals.wb_font_size + "cm");
+    wordbank[word].appendChild(document.createTextNode(word));
+    globals.svg.appendChild(wordbank[word]);
+    wordbank_row += 1;
+    if (wordbank_row == (wordbank_group + 1) * globals.wb_max_rows) {
+      wordbank_col += 1;
+      wordbank_row = wordbank_group * globals.wb_max_rows;
+    }
+    if (wordbank_col == globals.wb_max_cols) {
+      wordbank_col = 0;
+      wordbank_group += 1;
+      wordbank_row += globals.wb_max_rows;
+    }
+    globals.wordbank = wordbank;
+  }
+
 }

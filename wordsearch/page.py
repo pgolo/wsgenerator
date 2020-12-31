@@ -23,7 +23,7 @@ z = '''
      #
    ###
 '''
-puzzle = create('aaa', 'cc', 'ccc', words=['ddd', 'eee'], template=z)
+puzzle = create('aaa', 'bbb', 'ccc', words=['ddd', 'eee'], template=z)
 #puzzle = create(height=15, width=15, words=['Maryland', 'Virginia', 'Vermont', 'Montana', 'Delaware', 'Alabama', 'Alaska', 'Hawaii', 'Arizona', 'California', 'Texas', 'Indiana', 'Illinois', 'Minnesota', 'Wisconsin', 'Ohio', 'Nebraska', 'Iowa', 'Kentucky', 'Kansas', 'Florida'])
 with open('puzzle.html', mode='w', encoding='utf8') as f:
     f.write(puzzle)
