@@ -251,7 +251,7 @@ function renderLastElement(item, fn, x, y, puzzle, r, c) {
 function renderFrame(puzzle_width, puzzle_height) {
   var frame = document.createElementNS("http://www.w3.org/2000/svg", "rect");
   frame.setAttribute("width", (puzzle_width + 1) * globals.cell_size + globals.puzzle_margin_x * 2 + "cm");
-  frame.setAttribute("height", (puzzle_height + 1) * globals.cell_size + globals.puzzle_margin_x * 2 + "cm");
+  frame.setAttribute("height", (puzzle_height + 1) * globals.cell_size + globals.puzzle_margin_y * 2 + "cm");
   frame.setAttribute("style", globals.styles["grid-frame"]);
   frame.setAttribute("rx", globals.frame_rx);
   frame.setAttribute("ry", globals.frame_ry);
@@ -267,7 +267,7 @@ function renderWordbank(words, svg_width, puzzle_height) {
     word = words[i];
     wordbank[word] = document.createElementNS("http://www.w3.org/2000/svg", "text");
     wordbank[word].setAttribute("x", wordbank_col * svg_width / globals.wb_max_cols + "cm");
-    wordbank[word].setAttribute("y", globals.cell_size * puzzle_height + 4 + wordbank_row * globals.wb_font_size + "cm");
+    wordbank[word].setAttribute("y", globals.cell_size * (puzzle_height + 1) + globals.puzzle_margin_y * 2 + 1 + wordbank_row * globals.wb_font_size + "cm");
     wordbank[word].setAttribute("font-size", globals.wb_font_size + "cm");
     wordbank[word].appendChild(document.createTextNode(word));
     globals.svg.appendChild(wordbank[word]);
@@ -320,40 +320,6 @@ function render(words, puzzle) {
     y += globals.cell_size;
   }
   globals.buttons = buttons;
-
-  //renderFrame(puzzle_width, svg_width, puzzle_height);
-  var frame = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  frame.setAttribute("width", (puzzle_width + 1) * globals.cell_size + globals.puzzle_margin_x * 2 + "cm");
-  frame.setAttribute("height", (puzzle_height + 1) * globals.cell_size + globals.puzzle_margin_x * 2 + "cm");
-  frame.setAttribute("style", globals.styles["grid-frame"]);
-  frame.setAttribute("rx", globals.frame_rx);
-  frame.setAttribute("ry", globals.frame_ry);
-  globals.svg.appendChild(frame);
-
-  //globals.wordbank = renderWordbank(words, puzzle_height);
-  var wordbank = {};
-  var wordbank_group = 0;
-  var wordbank_row = 0;
-  var wordbank_col = 0;
-  for (i = 0; i < words.length; i++) {
-    word = words[i];
-    wordbank[word] = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    wordbank[word].setAttribute("x", wordbank_col * svg_width / globals.wb_max_cols + "cm");
-    wordbank[word].setAttribute("y", globals.cell_size * puzzle_height + 4 + wordbank_row * globals.wb_font_size + "cm");
-    wordbank[word].setAttribute("font-size", globals.wb_font_size + "cm");
-    wordbank[word].appendChild(document.createTextNode(word));
-    globals.svg.appendChild(wordbank[word]);
-    wordbank_row += 1;
-    if (wordbank_row == (wordbank_group + 1) * globals.wb_max_rows) {
-      wordbank_col += 1;
-      wordbank_row = wordbank_group * globals.wb_max_rows;
-    }
-    if (wordbank_col == globals.wb_max_cols) {
-      wordbank_col = 0;
-      wordbank_group += 1;
-      wordbank_row += globals.wb_max_rows;
-    }
-    globals.wordbank = wordbank;
-  }
-
+  renderFrame(puzzle_width, puzzle_height);
+  globals.wordbank = renderWordbank(words, svg_width, puzzle_height);
 }
