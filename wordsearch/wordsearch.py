@@ -40,6 +40,29 @@ def trace_grids(grid, words, word_index, grid_height, grid_width, hints, points)
         else:
             return solution, None, None, None, None
 
+def make_puzzle(height, width, words, grid):
+    directions = [(0, 1), (1, 0), (1, -1), (1, 1)]
+    points = [
+        item for sublist in [
+            item for sublist in [
+                [
+                    [
+                        (x, y, d) for x in range(width)
+                    ] for y in range(height)
+                ] for d in directions
+            ] for item in sublist
+        ] for item in sublist
+    ]
+    hints = {}
+    words = sorted(words, key=lambda word: -len(word))
+    solution, _, _, _, _ = trace_grids(grid, words, 0, height, width, hints, points)
+    for row in solution:
+        for i in range(len(row)):
+            if row[i] == '':
+                row[i] = random.choice(string.ascii_letters) # ' '
+            row[i] = row[i].upper()
+    return solution, hints
+
 def translate_hints(hints):
     solution = {}
     directions = {
@@ -63,29 +86,6 @@ def translate_hints(hints):
         x2 = x1 + direction[1] * (len(word) - 1) * (1 if order == 0 else -1)
         solution[word.upper()] = {'y1': y1, 'x1': x1, 'y2': y2, 'x2': x2, 'direction': direction_hint}
     return solution
-
-def make_puzzle(height, width, words, grid):
-    directions = [(0, 1), (1, 0), (1, -1), (1, 1)]
-    points = [
-        item for sublist in [
-            item for sublist in [
-                [
-                    [
-                        (x, y, d) for x in range(width)
-                    ] for y in range(height)
-                ] for d in directions
-            ] for item in sublist
-        ] for item in sublist
-    ]
-    hints = {}
-    words = sorted(words, key=lambda word: -len(word))
-    solution, _, _, _, _ = trace_grids(grid, words, 0, height, width, hints, points)
-    for row in solution:
-        for i in range(len(row)):
-            if row[i] == '':
-                row[i] = random.choice(string.ascii_letters) # ' '
-            row[i] = row[i].upper()
-    return solution, hints
 
 def check_template(c):
     assert c in [' ', '.', '#'], 'Only "." or "#" characters are allowed in template'
