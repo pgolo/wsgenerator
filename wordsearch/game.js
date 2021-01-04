@@ -10,6 +10,8 @@ var globals = {
   frame_ry: 10,
   word: '',
   wordbank: {},
+  solution: {},
+  highlighted: null,
   found: [],
   buttons: [],
   selected: [],
@@ -111,11 +113,7 @@ function highlightFrame(x1, y1, x2, y2, radius, angle) {
   return lines;
 }
 
-function highlightWord() {
-  r1 = globals.selected[0].r;
-  c1 = globals.selected[0].c;
-  r2 = globals.selected[globals.selected.length - 1].r;
-  c2 = globals.selected[globals.selected.length - 1].c;
+function highlightWord(r1, c1, r2, c2) {
   centerButton1 = getButtonCenter(r1, c1);
   centerButton2 = getButtonCenter(r2, c2);
   if (centerButton1.y == centerButton2.y) {
@@ -165,6 +163,22 @@ function highlightWord() {
   for (i = 0; i < frame.length; i++) {
     globals.svg.appendChild(frame[i]);
   }
+  return frame;
+}
+
+function locateWord(word) {
+  r1 = globals.solution[word]['y1'];
+  c1 = globals.solution[word]['x1'];
+  r2 = globals.solution[word]['y2'];
+  c2 = globals.solution[word]['x2'];
+  globals.highlighted = highlightWord(r1, c1, r2, c2);
+}
+
+function hideWordFrame() {
+  for (i = 0; i < globals.highlighted.length; i++) {
+    globals.svg.removeChild(globals.highlighted[i]);
+  }
+  globals.highlighted = null;
 }
 
 function recordLetter(r, c, letter) {
@@ -182,7 +196,12 @@ function recordLetter(r, c, letter) {
     globals.word += letter;
     if (globals.wordbank[globals.word] != undefined && !(globals.found.includes(globals.word))) {
       globals.found.push(globals.word);
-      highlightWord();
+      highlightWord(
+        globals.selected[0].r,
+        globals.selected[0].c,
+        globals.selected[globals.selected.length - 1].r,
+        globals.selected[globals.selected.length - 1].c
+      );
       globals.wordbank[globals.word].setAttribute("style", globals.styles["word-crossout"]);
       deselectAll();
     }
@@ -269,6 +288,8 @@ function renderWordbank(words, svg_width, puzzle_height) {
     wordbank[word].setAttribute("x", wordbank_col * svg_width / globals.wb_max_cols + "cm");
     wordbank[word].setAttribute("y", globals.cell_size * (puzzle_height + 1) + globals.puzzle_margin_y * 2 + 1 + wordbank_row * globals.wb_font_size + "cm");
     wordbank[word].setAttribute("font-size", globals.wb_font_size + "cm");
+    wordbank[word].setAttribute("onmouseover", "locateWord(\"" + word + "\");");
+    wordbank[word].setAttribute("onmouseout", "hideWordFrame();");
     wordbank[word].appendChild(document.createTextNode(word));
     globals.svg.appendChild(wordbank[word]);
     wordbank_row += 1;
@@ -285,10 +306,11 @@ function renderWordbank(words, svg_width, puzzle_height) {
   return wordbank;
 }
 
-function render(words, puzzle) {
+function render(words, puzzle, solution) {
   if (puzzle.length == 0) {
     return noPuzzle();
   }
+  globals.solution = solution;
   var grid = [];
   var letters = [];
   var buttons = [];

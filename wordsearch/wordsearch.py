@@ -49,17 +49,19 @@ def translate_hints(hints):
         (1, 1): ('UL->DR', 'DR->UL')
     }
     for word in hints:
-        (y, x, direction, letters) = hints[word]
+        (y1, x1, direction, letters) = hints[word]
         assert word == letters or word == ''.join(reversed(letters))
         order = 0
         if word != letters:
-            y += direction[0] * (len(word) - 1)
-            x += direction[1] * (len(word) - 1)
+            y1 += direction[0] * (len(word) - 1)
+            x1 += direction[1] * (len(word) - 1)
             order = 1
         direction_hint = directions[direction][order]
-        x += 1
-        y += 1
-        solution[word] = {'row': y, 'column': x, 'direction': direction_hint}
+        y1 += 1
+        y2 = y1 + direction[0] * (len(word) - 1) * (1 if order == 0 else -1)
+        x1 += 1
+        x2 = x1 + direction[1] * (len(word) - 1) * (1 if order == 0 else -1)
+        solution[word.upper()] = {'y1': y1, 'x1': x1, 'y2': y2, 'x2': x2, 'direction': direction_hint}
     return solution
 
 def make_puzzle(height, width, words, grid):
