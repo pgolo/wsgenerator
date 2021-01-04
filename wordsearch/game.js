@@ -13,6 +13,7 @@ var globals = {
   solution: {},
   highlighted: null,
   found: [],
+  found_highlighted: [],
   buttons: [],
   selected: [],
   selected_buttons: [],
@@ -23,6 +24,7 @@ var globals = {
     "grid-frame": "fill:none;stroke:black;stroke-width:1px",
     "word-highlight": "stroke:red;stroke-width:2px",
     "word-crossout": "text-decoration:line-through",
+    "word-normal": "text-decoration:none",
     "button-over": "fill:white;opacity:50%;stroke-width:0px",
     "button-out": "fill:white;opacity:0%;stroke-width:0px",
     "button-selected": "fill:white;opacity:90%;stroke-width:0px"
@@ -181,6 +183,19 @@ function hideWordFrame() {
   globals.highlighted = null;
 }
 
+function resetWord(word) {
+  i = globals.found.indexOf(word);
+  if (i == -1) {
+    return;
+  }
+  for (j = 0; j < globals.found_highlighted[i].length; j++) {
+    globals.svg.removeChild(globals.found_highlighted[i][j]);
+  }
+  globals.found.splice(i, 1);
+  globals.found_highlighted.splice(i, 1);
+  globals.wordbank[word].setAttribute("style", globals.styles['word-normal']);
+}
+
 function recordLetter(r, c, letter) {
   deselect = false;
   if (!maySelect(r, c)) {
@@ -196,11 +211,13 @@ function recordLetter(r, c, letter) {
     globals.word += letter;
     if (globals.wordbank[globals.word] != undefined && !(globals.found.includes(globals.word))) {
       globals.found.push(globals.word);
-      highlightWord(
-        globals.selected[0].r,
-        globals.selected[0].c,
-        globals.selected[globals.selected.length - 1].r,
-        globals.selected[globals.selected.length - 1].c
+      globals.found_highlighted.push(
+        highlightWord(
+          globals.selected[0].r,
+          globals.selected[0].c,
+          globals.selected[globals.selected.length - 1].r,
+          globals.selected[globals.selected.length - 1].c
+        )
       );
       globals.wordbank[globals.word].setAttribute("style", globals.styles["word-crossout"]);
       deselectAll();
@@ -290,6 +307,7 @@ function renderWordbank(words, svg_width, puzzle_height) {
     wordbank[word].setAttribute("font-size", globals.wb_font_size + "cm");
     wordbank[word].setAttribute("onmouseover", "locateWord(\"" + word + "\");");
     wordbank[word].setAttribute("onmouseout", "hideWordFrame();");
+    wordbank[word].setAttribute("onmousedown", "resetWord(\"" + word + "\");");
     wordbank[word].appendChild(document.createTextNode(word));
     globals.svg.appendChild(wordbank[word]);
     wordbank_row += 1;
