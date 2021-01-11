@@ -4,7 +4,7 @@ import wordsearch
 
 app = Flask(__name__)
 
-@app.route('/api/simple', methods=['GET'])
+@app.route('/api/instant/simple', methods=['GET'])
 def get_simple_puzzle():
     height = json.loads(request.args['height'])
     width = json.loads(request.args['width'])
@@ -15,7 +15,7 @@ def get_simple_puzzle():
     out = {'words': wordbank, 'puzzle': puzzle, 'solution': solution}
     return jsonify(out)
 
-@app.route('/api/fancy', methods=['POST'])
+@app.route('/api/instant/fancy', methods=['POST'])
 def get_fancy_puzzle():
     data = request.form
     template = data['template']
