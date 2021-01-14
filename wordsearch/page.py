@@ -11,6 +11,7 @@ def create(*args, **kwargs):
         puzzle_code = f.read().replace('$words', str(wordbank).replace('\'', '"')).replace('$puzzle', str(puzzle).replace('\'', '"')).replace('$solution', str(hints).replace('\'', '"'))
     return puzzle_code
 
+"""
 z = '''
 ###
   #
@@ -28,3 +29,4 @@ z = '''
 puzzle = create(height=15, width=15, words=['Maryland', 'Virginia', 'Vermont', 'Montana', 'Delaware', 'Alabama', 'Alaska', 'Hawaii', 'Arizona', 'California', 'Texas', 'Indiana', 'Illinois', 'Minnesota', 'Wisconsin', 'Ohio', 'Nebraska', 'Iowa', 'Kentucky', 'Kansas', 'Florida', 'Arkansas'])
 with open('puzzle.html', mode='w', encoding='utf8') as f:
     f.write(puzzle)
+"""
