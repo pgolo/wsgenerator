@@ -11,6 +11,7 @@ var globals = {
   word: '',
   wordbank: {},
   solution: {},
+  reveal_words: false,
   highlighted: null,
   found: [],
   found_highlighted: [],
@@ -305,9 +306,11 @@ function renderWordbank(words, svg_width, puzzle_height) {
     wordbank[word].setAttribute("x", wordbank_col * svg_width / globals.wb_max_cols + "cm");
     wordbank[word].setAttribute("y", globals.cell_size * (puzzle_height + 1) + globals.puzzle_margin_y * 2 + 1 + wordbank_row * globals.wb_font_size + "cm");
     wordbank[word].setAttribute("font-size", globals.wb_font_size + "cm");
-    wordbank[word].setAttribute("onmouseover", "locateWord(\"" + word + "\");");
-    wordbank[word].setAttribute("onmouseout", "hideWordFrame();");
-    wordbank[word].setAttribute("onmousedown", "resetWord(\"" + word + "\");");
+    if (globals.reveal_words == true) {
+      wordbank[word].setAttribute("onmouseover", "locateWord(\"" + word + "\");");
+      wordbank[word].setAttribute("onmouseout", "hideWordFrame();");
+      wordbank[word].setAttribute("onmousedown", "resetWord(\"" + word + "\");");  
+    }
     wordbank[word].appendChild(document.createTextNode(word));
     globals.svg.appendChild(wordbank[word]);
     wordbank_row += 1;
@@ -324,11 +327,12 @@ function renderWordbank(words, svg_width, puzzle_height) {
   return wordbank;
 }
 
-function render(words, puzzle, solution) {
+function render(words, puzzle, solution, reveal_words) {
   if (puzzle.length == 0) {
     return noPuzzle();
   }
   globals.solution = solution;
+  globals.reveal_words = reveal_words;
   var grid = [];
   var letters = [];
   var buttons = [];

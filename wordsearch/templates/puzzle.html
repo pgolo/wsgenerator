@@ -5,7 +5,7 @@
   <body>
   <script type="text/javascript" src="{{ url_for('static', filename='game.js') }}"></script>
   <script type="text/javascript">
-    render({{words|safe}}, {{puzzle|safe}}, {{solution|safe}});
+    render({{words|safe}}, {{puzzle|safe}}, {{solution|safe}}, {{reveal_words|safe}});
   </script>
   </body>
 </html>

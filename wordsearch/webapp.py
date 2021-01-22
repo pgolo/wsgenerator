@@ -30,7 +30,7 @@ def get_simple_puzzle():
     height, width, words = get_simple_args(request)
     out, wordbank, puzzle, solution = generate_puzzle(height=height, width=width, words=words)
     if 'page' in request.args:
-        return render_template('puzzle.html', words=wordbank, puzzle=puzzle, solution=solution)
+        return render_template('puzzle.html', words=wordbank, puzzle=puzzle, solution=solution, reveal_words='true' if 'reveal' in request.args else 'false')
     return jsonify(out)
 
 @app.route('/api/instant/fancy', methods=['POST', 'GET'])
