@@ -29,8 +29,15 @@ var globals = {
     "button-over": "fill:white;opacity:50%;stroke-width:0px",
     "button-out": "fill:white;opacity:0%;stroke-width:0px",
     "button-selected": "fill:white;opacity:90%;stroke-width:0px"
-  }
+  },
+  timer_function: null,
+  timer: 0
 };
+
+function nextSecond() {
+  globals.timer += 1;
+  document.getElementById("timer").innerHTML = globals.timer.toString();
+}
 
 function maySelect(r, c) {
   if (globals.selected.length == 0) {
@@ -198,6 +205,9 @@ function resetWord(word) {
 }
 
 function recordLetter(r, c, letter) {
+  if (globals.timer_function == null) {
+    globals.timer_function = setInterval(nextSecond, 1000);
+  }
   deselect = false;
   if (!maySelect(r, c)) {
     if (globals.selected.length == 1 && r == globals.selected[0].r && c == globals.selected[0].c) {
@@ -220,10 +230,10 @@ function recordLetter(r, c, letter) {
           globals.selected[globals.selected.length - 1].c
         )
       );
-        
       globals.wordbank[globals.word].setAttribute("style", globals.styles["word-crossout"]);
       deselectAll();
       if (globals.found.length == Object.keys(globals.wordbank).length) {
+        clearInterval(globals.timer_function);
         alert('You did it!');
       }
     }
