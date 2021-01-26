@@ -220,8 +220,12 @@ function recordLetter(r, c, letter) {
           globals.selected[globals.selected.length - 1].c
         )
       );
+        
       globals.wordbank[globals.word].setAttribute("style", globals.styles["word-crossout"]);
       deselectAll();
+      if (globals.found.length == Object.keys(globals.wordbank).length) {
+        alert('You did it!');
+      }
     }
   }
 }

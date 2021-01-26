@@ -35,7 +35,7 @@ def get_simple_puzzle():
     global cur
     height, width, words, title = get_simple_args(request)
     out, wordbank, puzzle, solution = generate_puzzle(height=height, width=width, words=words, title=title)
-    cur.execute('insert into puzzles (title, words, puzzle, solution) select ?, ?, ?, ?;', (title, str(wordbank), str(puzzle), str(solution)))
+    cur.execute('insert into puzzles (title, words, puzzle, solution, created) select ?, ?, ?, ?, datetime(\'now\');', (title, str(wordbank), str(puzzle), str(solution)))
     conn.commit()
     if 'page' in request.args:
         return render_template('puzzle.html', words=wordbank, puzzle=puzzle, solution=solution, title=title, reveal_words='true' if 'reveal' in request.args else 'false')
@@ -47,7 +47,7 @@ def get_fancy_puzzle():
     global cur
     template, words, title = get_fancy_args(request)
     out, wordbank, puzzle, solution = generate_puzzle(template=template, words=words, title=title)
-    cur.execute('insert into puzzles (title, words, puzzle, solution) select ?, ?, ?, ?;', (title, str(wordbank), str(puzzle), str(solution)))
+    cur.execute('insert into puzzles (title, words, puzzle, solution, created) select ?, ?, ?, ?, datetime(\'now\');', (title, str(wordbank), str(puzzle), str(solution)))
     conn.commit()
     if 'page' in request.args:
         return render_template('puzzle.html', words=wordbank, puzzle=puzzle, solution=solution, title=title, reveal_words='true' if 'reveal' in request.args else 'false')
@@ -58,19 +58,19 @@ def get_puzzle_by_id():
     global conn
     global cur
     _id = json.loads(request.args['id'])
-    cur.execute('select title, words, puzzle, solution from puzzles where rowid = %d;' % (_id))
+    cur.execute('select rowid, title, words, puzzle, solution, created from puzzles where rowid = %d;' % (_id))
     row = cur.fetchone()
-    title, words, puzzle, solution = row[0], row[1], row[2], row[3]
-    return render_template('puzzle.html', words=words, puzzle=puzzle, solution=solution, title=title, reveal_words='true' if 'reveal' in request.args else 'false')
+    rowid, title, words, puzzle, solution, created = row[0], row[1], row[2], row[3], row[4], row[5]
+    return render_template('puzzle.html', words=words, puzzle=puzzle, solution=solution, title=title, reveal_words='true' if 'reveal' in request.args else 'false', rowid=rowid, created=created)
 
 @app.route('/')
 def get_random_puzzle():
     global conn
     global cur
-    cur.execute('select title, words, puzzle, solution from puzzles order by random() limit 1;')
+    cur.execute('select rowid, title, words, puzzle, solution, created from puzzles order by random() limit 1;')
     row = cur.fetchone()
-    title, words, puzzle, solution = row[0], row[1], row[2], row[3]
-    return render_template('puzzle.html', words=words, puzzle=puzzle, solution=solution, title=title, reveal_words='true' if 'reveal' in request.args else 'false')
+    rowid, title, words, puzzle, solution, created = row[0], row[1], row[2], row[3], row[4], row[5]
+    return render_template('puzzle.html', words=words, puzzle=puzzle, solution=solution, title=title, reveal_words='true' if 'reveal' in request.args else 'false', rowid=rowid, created=created)
 
 if __name__ == '__main__':
     conn = sqlite3.connect('wordsearch.db', check_same_thread=False)
@@ -81,7 +81,7 @@ if __name__ == '__main__':
             sample = json.load(f)
         title, wordbank, puzzle, solution = sample['title'], str(sample['wordbank']), str(sample['puzzle']), str(sample['solution'])
         print(title)
-        cur.execute('create table puzzles (title text, words text, puzzle text, solution text);')
-        cur.execute('insert into puzzles (title, words, puzzle, solution) select ?, ?, ?, ?;', (title, wordbank, puzzle, solution))
+        cur.execute('create table puzzles (title text, words text, puzzle text, solution text, created text, solved_by text, solved_on text, solved_in number);')
+        cur.execute('insert into puzzles (title, words, puzzle, solution, created) select ?, ?, ?, ?, datetime(\'now\');', (title, wordbank, puzzle, solution))
         conn.commit()
     app.run()
