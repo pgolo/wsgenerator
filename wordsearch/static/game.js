@@ -31,12 +31,12 @@ var globals = {
     "button-selected": "fill:white;opacity:90%;stroke-width:0px"
   },
   timer_function: null,
-  timer: 0
+  seconds_elapsed: 0
 };
 
 function nextSecond() {
-  globals.timer += 1;
-  document.getElementById("timer").innerHTML = globals.timer.toString();
+  globals.seconds_elapsed += 1;
+  document.getElementById("timer").innerHTML = globals.seconds_elapsed.toString();
 }
 
 function maySelect(r, c) {
@@ -234,7 +234,7 @@ function recordLetter(r, c, letter) {
       deselectAll();
       if (globals.found.length == Object.keys(globals.wordbank).length) {
         clearInterval(globals.timer_function);
-        alert('You did it!');
+        alert('You did it in ' + globals.seconds_elapsed + ' seconds!');
       }
     }
   }
