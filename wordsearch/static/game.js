@@ -31,8 +31,17 @@ var globals = {
     "button-selected": "fill:white;opacity:90%;stroke-width:0px"
   },
   timer_function: null,
-  seconds_elapsed: 0
+  seconds_elapsed: 0,
+  target: null
 };
+
+function stopTimer() {
+  if (globals.timer_function != null) {
+    clearInterval(globals.timer_function);
+  }
+  globals.timer_function = null;
+  globals.seconds_elapsed = 0;
+}
 
 function nextSecond() {
   globals.seconds_elapsed += 1;
@@ -235,6 +244,7 @@ function recordLetter(r, c, letter) {
       if (globals.found.length == Object.keys(globals.wordbank).length) {
         clearInterval(globals.timer_function);
         alert('You did it in ' + globals.seconds_elapsed + ' seconds!');
+        stopTimer();
       }
     }
   }
@@ -249,7 +259,7 @@ function noPuzzle() {
   message.setAttribute("text-anchor", "start");
   message.appendChild(document.createTextNode("Puzzle came empty :("));
   globals.svg.appendChild(message);
-  document.body.appendChild(globals.svg);
+  globals.target.appendChild(globals.svg);
 }
 
 function renderCell(grid, n, m, x, y, puzzle, r, c) {
@@ -341,7 +351,8 @@ function renderWordbank(words, svg_width, puzzle_height) {
   return wordbank;
 }
 
-function render(words, puzzle, solution, reveal_words) {
+function render(words, puzzle, solution, reveal_words, target_id) {
+  globals.target = document.getElementById(target_id);
   if (puzzle.length == 0) {
     return noPuzzle();
   }
@@ -357,9 +368,10 @@ function render(words, puzzle, solution, reveal_words) {
   var puzzle_height = puzzle.length;
   var svg_width = (puzzle_width + 1) * globals.cell_size + globals.puzzle_margin_x * 2;
   var svg_height = (puzzle_height + 1) * globals.cell_size + globals.puzzle_margin_y * 2 + wordbank_height + 1;
+  globals.svg.setAttribute("id", "svgPuzzle");
   globals.svg.setAttribute("width", svg_width + "cm");
   globals.svg.setAttribute("height", svg_height + "cm");
-  document.body.appendChild(globals.svg);
+  globals.target.appendChild(globals.svg);
   for (r = 0; r < puzzle.length; r++) {
     x = globals.puzzle_margin_x;
     grid.push([]); letters.push([]); buttons.push([]);

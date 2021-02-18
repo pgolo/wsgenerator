@@ -12,6 +12,14 @@ def get_fancy_args(rqst):
     data = rqst.form
     return data['template'], data['words'].split(' '), data['title']
 
+def puzzle2template(puzzle):
+    template = ''
+    for row in puzzle[1:]:
+        for cell in row[1:]:
+            template += '#' if cell else ' '
+        template += '\n'
+    return template
+
 def generate_puzzle(**kwargs):
     if 'template' in kwargs:
         assert 'words' in kwargs
@@ -50,7 +58,7 @@ def get_fancy_puzzle():
     cur.execute('insert into puzzles (title, words, puzzle, solution, created) select ?, ?, ?, ?, datetime(\'now\');', (title, str(wordbank), str(puzzle), str(solution)))
     conn.commit()
     if 'page' in request.args:
-        return render_template('puzzle.html', words=wordbank, puzzle=puzzle, solution=solution, title=title, reveal_words='true' if 'reveal' in request.args else 'false')
+        return render_template('puzzle.html', words=wordbank, puzzle=puzzle, solution=solution, title=title, reveal_words='true' if 'reveal' in request.args else 'false', template=template)
     return jsonify(out)
 
 @app.route('/api/saved/page', methods=['GET'])
@@ -62,6 +70,17 @@ def get_puzzle_by_id():
     row = cur.fetchone()
     rowid, title, words, puzzle, solution, created = row[0], row[1], row[2], row[3], row[4], row[5]
     return render_template('puzzle.html', words=words, puzzle=puzzle, solution=solution, title=title, reveal_words='true' if 'reveal' in request.args else 'false', rowid=rowid, created=created)
+
+@app.route('/api/instant/shuffle', methods=['POST'])
+def shuffle_puzzle():
+    global conn
+    global cur
+    puzzle_str, words_str, title = get_fancy_args(request)
+    old_puzzle = [row.split(',') for row in puzzle_str.split('|')]
+    template = puzzle2template(old_puzzle)
+    words = words_str[0].split(',')
+    out, _, _, _ = generate_puzzle(template=template, words=words, title=title)
+    return jsonify(out)
 
 @app.route('/')
 def get_random_puzzle():
@@ -80,7 +99,6 @@ if __name__ == '__main__':
         with open('sample.json', mode='r', encoding='utf8') as f:
             sample = json.load(f)
         title, wordbank, puzzle, solution = sample['title'], str(sample['wordbank']), str(sample['puzzle']), str(sample['solution'])
-        print(title)
         cur.execute('create table puzzles (title text, words text, puzzle text, solution text, created text, solved_by text, solved_on text, solved_in number);')
         cur.execute('insert into puzzles (title, words, puzzle, solution, created) select ?, ?, ?, ?, datetime(\'now\');', (title, wordbank, puzzle, solution))
         conn.commit()

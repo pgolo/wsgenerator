@@ -3,12 +3,49 @@
     <style type="text/css">body{-webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;}</style>
   </head>
   <body>
-    <h1>{{title|safe}}</h1>
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery-3.5.1.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='game.js') }}"></script>
     <script type="text/javascript">
-      render({{words|safe}}, {{puzzle|safe}}, {{solution|safe}}, {{reveal_words|safe}});
+      var words = {{words|safe}};
+      var puzzle = {{puzzle|safe}};
+      var solution = {{solution|safe}};
+      var reveal_words = {{reveal_words|safe}};
+      var title = '{{title|safe}}';
     </script>
+    <script type="text/javascript">
+      $(document).ready(function(){
+        render(words, puzzle, solution, reveal_words, 'puzzle');
+      });
+      $(document).ready(function(){
+        $("#shuffle").click(function(){
+          stopTimer();
+          $("#svgPuzzle").empty();
+          $("#timer").empty();
+          $.ajax(
+            {
+              url: {{ request.script_root|tojson|safe }} + "/api/instant/shuffle",
+              type: "POST",
+              data: {
+                "words": words.join(','),
+                "template": puzzle.join('|'),
+                "title": title
+              },
+              async: false,
+              success: function(result){
+                words = result['words'];
+                puzzle = result['puzzle'];
+                solution = result['solution'];
+                render(words, puzzle, solution, reveal_words, 'puzzle');
+              }
+            }
+          );
+        });
+      });
+    </script>
+    <div id="title"><h1>{{title|safe}}</h1></div>
+    <div id="puzzle"></div>
     <p id="timer"></p>
+    <button id="shuffle">Shuffle</button>
     <footer>Puzzle #{{rowid|safe}}, created {{created|safe}}</footer>
   </body>
 </html>
