@@ -21,6 +21,14 @@
           stopTimer();
           $("#svgPuzzle").empty();
           $("#timer").empty();
+          wait = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          wait.setAttribute("x", "1cm");
+          wait.setAttribute("y", "0cm");
+          wait.setAttribute("font-size", globals.font_size + "cm");
+          wait.setAttribute("dominant-baseline", "hanging");
+          wait.setAttribute("text-anchor", "start");
+          wait.appendChild(document.createTextNode("Wait..."));
+          document.getElementById("svgPuzzle").appendChild(wait);
           $.ajax(
             {
               url: {{ request.script_root|tojson|safe }} + "/api/instant/shuffle",
@@ -30,8 +38,9 @@
                 "template": puzzle.join('|'),
                 "title": title
               },
-              async: false,
+              async: true,
               success: function(result){
+                document.getElementById("svgPuzzle").removeChild(wait);
                 words = result['words'];
                 puzzle = result['puzzle'];
                 solution = result['solution'];

@@ -1,4 +1,5 @@
 from flask import Flask, request, Response, render_template, jsonify, json
+from multiprocessing import Process, Manager
 import random
 import sqlite3
 import wordsearch
@@ -20,20 +21,39 @@ def puzzle2template(puzzle):
         template += '\n'
     return template
 
+def process_generate_puzzle(params, return_dict):
+    puzzle, solution = wordsearch.pretty_puzzle(**params)
+    return_dict['puzzle'] = puzzle
+    return_dict['solution'] = solution
+
 def generate_puzzle(**kwargs):
+    #puzzle, solution = [], {}
+    manager = Manager()
+    return_dict = manager.dict()
     if 'template' in kwargs:
         assert 'words' in kwargs
         assert 'title' in kwargs
-        puzzle, solution = wordsearch.pretty_puzzle(template=kwargs['template'], words=kwargs['words'])
+        #puzzle, solution = wordsearch.pretty_puzzle(template=kwargs['template'], words=kwargs['words'])
+        args_to_pass = {'template': kwargs['template'], 'words': kwargs['words']}
     else:
         assert 'height' in kwargs
         assert 'width' in kwargs
         assert 'words' in kwargs
         assert 'title' in kwargs
-        puzzle, solution = wordsearch.pretty_puzzle(height=kwargs['height'], width=kwargs['width'], words=kwargs['words'])
+        #puzzle, solution = wordsearch.pretty_puzzle(height=kwargs['height'], width=kwargs['width'], words=kwargs['words'])
+        args_to_pass = {'height': kwargs['height'], 'width': kwargs['width'], 'words': kwargs['words']}
+    title = kwargs['title']
+    proc = Process(target=process_generate_puzzle, args=(args_to_pass, return_dict,))
+    proc.start()
+    proc.join(5)
+    if proc.is_alive():
+        proc.terminate()
+        proc.join()
+        return {'words': [], 'puzzle': [], 'solution': {}, 'title': title}, [], [], {}
+    puzzle = return_dict['puzzle']
+    solution = return_dict['solution']
     wordbank = list(solution.keys())
     random.shuffle(wordbank)
-    title = kwargs['title']
     out = {'words': wordbank, 'puzzle': puzzle, 'solution': solution, 'title': title}
     return out, wordbank, puzzle, solution
 
