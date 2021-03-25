@@ -1,2 +1,4 @@
-# wordsearch
-Word search puzzle
+# wsgenerator
+Word search puzzle generator
+
+TODO: update readme
