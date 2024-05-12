@@ -2,7 +2,13 @@ import copy
 import random
 import string
 
-def placements(grid, words, grid_height, grid_width, points):
+def placements(grid: list, words: list, grid_height: int, grid_width: int, points: list):
+    """
+    This function attempts to fit any item of "words" (list of strings)
+    in a "grid" (list of lists of strings) with dimensions of ("grid_width", "grid_height")
+    laying word out at the location ("x", "y") moving towards "direction"
+    defined in next item of "points" (list of tuples: ("x", "y", "direction")).
+    """
     while len(points) > 0:
         (x, y, direction) = points.pop()
         for letters in words:
@@ -20,9 +26,31 @@ def placements(grid, words, grid_height, grid_width, points):
             return solution, y, x, direction, letters
     return [], None, None, None, None
 
-def trace_grids(grid, words, word_index, grid_height, grid_width, hints, points):
+def trace_grids(grid: list, words: list, word_index: int, grid_height: int, grid_width: int, hints: dict, points: list, level: int=0):
+    """
+    This function attempts to recursively fit each item of "words" (list of strings)
+    in a "grid" (list of lists) with dimensions of ("grid_width", "grid_height").
+
+    "word_index" (integer): index of current element in "words".
+    "hints" (dict): pointer to object to store the answer key.
+    "points" (list): list of tuples ("x", "y", "d") representing each cell of the grid ("x", "y")
+        and direction "d" (tuple ("dy", "dx")) in which a word can be layed out
+    "level" (integer): percepted difficulty:
+        0 (easy): word can only be placed horizontally left->right, vertically up->down, diagonally up->down-left, and diagonally up->down-right;
+        1 (normal): words will be mostly placed horizontally left->right, vertically up->down, diagonally up->down-left, and diagonally up->down-right,
+            but sometimes they will be also placed reversed (right->left, down->up, down->up-left, down->up-right);
+        2 (hard): words will be mostly placed reversed (right->left, down->up, down->up-left, down->up-right),
+            but sometimes they will be also placed in more convenient way (left->right, up->down, up->down-left, up->down-right);
+        3 (insane): words can only be placed reversed (right->left, down->up, down->up-left, down->up-right).
+    """
     word = words[word_index]
-    _words = [word, ''.join(reversed(word))]
+    reversed_word = ''.join(reversed(word))
+    _words = {
+        0: [word],
+        1: [word, reversed_word],
+        2: [reversed_word, word],
+        3: [reversed_word]
+    }[level]
     _points = [point for point in points if grid[point[1]][point[0]] != '#']
     random.shuffle(_words)
     random.shuffle(_points)
@@ -40,7 +68,16 @@ def trace_grids(grid, words, word_index, grid_height, grid_width, hints, points)
         else:
             return solution, None, None, None, None
 
-def make_puzzle(height, width, words, grid):
+def make_puzzle(height: int, width: int, words: list, grid: list):
+    """
+    This function generates word search puzzle.
+
+    "height" (integer): height of the grid.
+    "width" (integer): width of the grid.
+    "words" (list): list of words to fit in the grid.
+    "grid" (list): list of lists representing the grid to be filled with letters.
+        Grid must have dimensions of ("width", "height")
+    """
     directions = [(0, 1), (1, 0), (1, -1), (1, 1)]
     points = [
         item for sublist in [
@@ -63,7 +100,11 @@ def make_puzzle(height, width, words, grid):
             row[i] = row[i].upper()
     return solution, hints
 
-def translate_hints(hints):
+def translate_hints(hints: dict):
+    """
+    This function translates "hints" (dict) into readable answer key for a puzzle,
+    and returns it as a dict object.
+    """
     solution = {}
     directions = {
         (0, 1): ('L->R', 'R->L'),
@@ -88,10 +129,28 @@ def translate_hints(hints):
     return solution
 
 def check_template(c):
+    """
+    This function asserts that passed character is allowed in a template of a word search puzzle
+    """
     assert c in [' ', '.', '#'], 'Only "." or "#" characters are allowed in template'
     return {' ': '#', '.': '#', '#': ''}[c]
 
 def pretty_puzzle(*args, **kwargs):
+    """
+    This function generates a word search puzzle and an answer key for it.
+
+    "*args": list of words to fit in the puzzle (required).
+    "*kwargs": parameters of the puzzle:
+        "height" (integer): height of the grid (required in "grid" is not provided);
+        "width" (integer): width of the grid (required if "grid" is not provided);
+        "grid" (list): list of lists representing the grid to fill (required if "width" and "height" are not provided);
+        "template" (string): template for the grid (optional).
+    If both "height" and "width" AND "grid" parameters are provided,
+        then "grid" is expected to have dimensions of ("width", "height").
+    "template" is a multi-line string containing characters "#" and ".".
+        Character "#" represents a cell where a letter can be placed.
+        Character "." represents a cell where a letter cannot be placed.
+    """
     words = []
     if 'words' in kwargs:
         words = list(kwargs['words'])
