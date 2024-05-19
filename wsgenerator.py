@@ -152,6 +152,13 @@ def pretty_puzzle(*args, **kwargs):
         "width" (integer): width of the grid (required if "grid" is not provided);
         "grid" (list): list of lists representing the grid to fill (required if "width" and "height" are not provided);
         "template" (string): template for the grid (optional).
+    "level" (integer): percepted difficulty (optional, default is 0):
+        0 (easy): word can only be placed horizontally left->right, vertically up->down, diagonally up->down-left, and diagonally up->down-right;
+        1 (normal): words will be mostly placed horizontally left->right, vertically up->down, diagonally up->down-left, and diagonally up->down-right,
+            but sometimes they will be also placed reversed (right->left, down->up, down->up-left, down->up-right);
+        2 (hard): words will be mostly placed reversed (right->left, down->up, down->up-left, down->up-right),
+            but sometimes they will be also placed in more convenient way (left->right, up->down, up->down-left, up->down-right);
+        3 (insane): words can only be placed reversed (right->left, down->up, down->up-left, down->up-right).
     If both "height" and "width" AND "grid" parameters are provided,
         then "grid" is expected to have dimensions of ("width", "height").
     "template" is a multi-line string containing characters "#" and ".".
@@ -165,6 +172,7 @@ def pretty_puzzle(*args, **kwargs):
     grid = None
     height = None
     width = None
+    level = 0
     if 'grid' in kwargs:
         grid = kwargs['grid']
     if 'template' in kwargs:
@@ -182,11 +190,13 @@ def pretty_puzzle(*args, **kwargs):
         height = kwargs['height']
     if 'width' in kwargs:
         width = kwargs['width']
+    if 'level' in kwargs:
+        level = kwargs['level']
     assert len(words) > 0, 'No words to process'
     assert grid is not None or (height is not None and width is not None), 'Grid paremeters are not specified'
     if grid is None:
         grid = [['' for _ in range(width)] for _ in range(height)]
-    puzzle, hints = make_puzzle(height, width, words, grid)
+    puzzle, hints = make_puzzle(height, width, words, grid, level)
     if len(puzzle) == 0:
         return [], {}
     _pretty_puzzle = []
