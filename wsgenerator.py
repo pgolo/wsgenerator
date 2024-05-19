@@ -68,7 +68,7 @@ def trace_grids(grid: list, words: list, word_index: int, grid_height: int, grid
         else:
             return solution, None, None, None, None
 
-def make_puzzle(height: int, width: int, words: list, grid: list):
+def make_puzzle(height: int, width: int, words: list, grid: list, level: int=0):
     """
     This function generates word search puzzle.
 
@@ -77,6 +77,13 @@ def make_puzzle(height: int, width: int, words: list, grid: list):
     "words" (list): list of words to fit in the grid.
     "grid" (list): list of lists representing the grid to be filled with letters.
         Grid must have dimensions of ("width", "height")
+    "level" (integer): percepted difficulty:
+        0 (easy): word can only be placed horizontally left->right, vertically up->down, diagonally up->down-left, and diagonally up->down-right;
+        1 (normal): words will be mostly placed horizontally left->right, vertically up->down, diagonally up->down-left, and diagonally up->down-right,
+            but sometimes they will be also placed reversed (right->left, down->up, down->up-left, down->up-right);
+        2 (hard): words will be mostly placed reversed (right->left, down->up, down->up-left, down->up-right),
+            but sometimes they will be also placed in more convenient way (left->right, up->down, up->down-left, up->down-right);
+        3 (insane): words can only be placed reversed (right->left, down->up, down->up-left, down->up-right).
     """
     directions = [(0, 1), (1, 0), (1, -1), (1, 1)]
     points = [
@@ -92,7 +99,7 @@ def make_puzzle(height: int, width: int, words: list, grid: list):
     ]
     hints = {}
     words = sorted(words, key=lambda word: -len(word))
-    solution, _, _, _, _ = trace_grids(grid, words, 0, height, width, hints, points)
+    solution, _, _, _, _ = trace_grids(grid, words, 0, height, width, hints, points, level)
     for row in solution:
         for i in range(len(row)):
             if row[i] == '':
