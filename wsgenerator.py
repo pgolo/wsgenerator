@@ -1,3 +1,90 @@
+"""
+Usage:
+
+```
+import wsgenerator
+
+puzzle, solution = wsgenerator.pretty_puzzle('car', 'bicycle', 'airplane', 'bus', height=8, width=8, level=0)
+for row in puzzle:
+    print(row)
+for word in solution:
+    print(word, solution[word])
+
+# [' ', '1', '2', '3', '4', '5', '6', '7', '8']
+# ['1', 'U', 'B', 'J', 'J', 'C', 'Z', 'E', 'K']
+# ['2', 'P', 'L', 'U', 'C', 'S', 'A', 'Y', 'I']
+# ['3', 'J', 'P', 'G', 'S', 'R', 'Q', 'R', 'U']
+# ['4', 'H', 'N', 'A', 'K', 'E', 'R', 'S', 'M']
+# ['5', 'M', 'S', 'M', 'P', 'X', 'S', 'X', 'A']
+# ['6', 'P', 'B', 'I', 'C', 'Y', 'C', 'L', 'E']
+# ['7', 'A', 'I', 'R', 'P', 'L', 'A', 'N', 'E']
+# ['8', 'R', 'M', 'P', 'B', 'N', 'N', 'K', 'V']
+# AIRPLANE {'y1': 7, 'x1': 1, 'y2': 7, 'x2': 8, 'direction': 'L->R'}
+# BICYCLE {'y1': 6, 'x1': 2, 'y2': 6, 'x2': 8, 'direction': 'L->R'}
+# CAR {'y1': 1, 'x1': 5, 'y2': 3, 'x2': 7, 'direction': 'UL->DR'}
+# BUS {'y1': 1, 'x1': 2, 'y2': 3, 'x2': 4, 'direction': 'UL->DR'}
+
+template = '''
+.....#.....
+....###....
+...#####...
+..#######..
+.#########.
+###########
+.#########.
+..#######..
+...#####...
+....###....
+.....#.....
+'''
+puzzle, solution = wsgenerator.pretty_puzzle('car', 'train', 'airplane', 'bus', template=template, level=0)
+for row in puzzle:
+    print(row)
+for word in solution:
+    print(word, solution[word])
+
+# [' ', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
+# ['1', '#', '#', '#', '#', '#', 'W', '#', '#', '#', '#', '#']
+# ['2', '#', '#', '#', '#', 'Y', 'B', 'A', '#', '#', '#', '#']
+# ['3', '#', '#', '#', 'M', 'R', 'C', 'I', 'J', '#', '#', '#']
+# ['4', '#', '#', 'C', 'R', 'E', 'N', 'R', 'A', 'K', '#', '#']
+# ['5', '#', 'V', 'Q', 'A', 'G', 'K', 'P', 'U', 'T', 'H', '#']
+# ['6', 'Q', 'G', 'B', 'O', 'R', 'E', 'L', 'O', 'M', 'K', 'A']
+# ['7', '#', 'W', 'M', 'K', 'H', 'T', 'A', 'A', 'O', 'J', '#']
+# ['8', '#', '#', 'T', 'R', 'A', 'I', 'N', 'T', 'D', '#', '#']
+# ['9', '#', '#', '#', 'G', 'R', 'B', 'E', 'A', '#', '#', '#']
+# ['10', '#', '#', '#', '#', 'V', 'U', 'Y', '#', '#', '#', '#']
+# ['11', '#', '#', '#', '#', '#', 'S', '#', '#', '#', '#', '#']
+# AIRPLANE {'y1': 2, 'x1': 7, 'y2': 9, 'x2': 7, 'direction': 'U->D'}
+# TRAIN {'y1': 8, 'x1': 3, 'y2': 8, 'x2': 7, 'direction': 'L->R'}
+# CAR {'y1': 4, 'x1': 3, 'y2': 6, 'x2': 5, 'direction': 'UL->DR'}
+# BUS {'y1': 9, 'x1': 6, 'y2': 11, 'x2': 6, 'direction': 'U->D'}
+```
+
+---
+MIT License
+
+Copyright (c) 2020 Pavel Golovatenko-Abramov
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
 import copy
 import random
 import string
@@ -121,7 +208,8 @@ def translate_hints(hints: dict):
     }
     for word in hints:
         (y1, x1, direction, letters) = hints[word]
-        assert word == letters or word == ''.join(reversed(letters))
+        if not (word == letters or word == ''.join(reversed(letters))):
+            raise Exception('mismatch between "word" and "letters"')
         order = 0
         if word != letters:
             y1 += direction[0] * (len(word) - 1)
@@ -139,7 +227,8 @@ def check_template(c):
     """
     This function asserts that passed character is allowed in a template of a word search puzzle
     """
-    assert c in [' ', '.', '#'], 'Only "." or "#" characters are allowed in template'
+    if c not in [' ', '.', '#']:
+        raise Exception('Only "." or "#" characters are allowed in template')
     return {' ': '#', '.': '#', '#': ''}[c]
 
 def pretty_puzzle(*args, **kwargs):
@@ -192,8 +281,10 @@ def pretty_puzzle(*args, **kwargs):
         width = kwargs['width']
     if 'level' in kwargs:
         level = kwargs['level']
-    assert len(words) > 0, 'No words to process'
-    assert grid is not None or (height is not None and width is not None), 'Grid paremeters are not specified'
+    if not len(words) > 0:
+        raise Exception('No words to process')
+    if not (grid is not None or (height is not None and width is not None)):
+        raise Exception('Grid paremeters are not specified')
     if grid is None:
         grid = [['' for _ in range(width)] for _ in range(height)]
     puzzle, hints = make_puzzle(height, width, words, grid, level)
