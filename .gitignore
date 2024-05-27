@@ -1,4 +1,6 @@
 .*
 **/__pycache__/*
+dist/*
+wsgenerator.egg-info/*
 !**/.gitkeep
 !**/.gitignore

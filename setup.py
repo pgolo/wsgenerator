@@ -6,7 +6,7 @@ with open('README.md', mode='r', encoding='utf8') as f:
 
 setup(
     name='wsgenerator',
-    version='1.0.0',
+    version='1.0.1',
     description='Module for generating word search puzzles',
     long_description=long_description,
     long_description_content_type='text/markdown',
