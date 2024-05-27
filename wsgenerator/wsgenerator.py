@@ -148,7 +148,7 @@ def trace_grids(grid: list, words: list, word_index: int, grid_height: int, grid
         else:
             return [], None, None, None, None
         if word_index < len(words) - 1:
-            temp, _, _, _, _ = trace_grids(solution, words, word_index + 1, grid_height, grid_width, hints, points)
+            temp, _, _, _, _ = trace_grids(solution, words, word_index + 1, grid_height, grid_width, hints, points, level)
             if len(temp) > 0:
                 return temp, None, None, None, None
             del hints[word]
